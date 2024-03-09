@@ -3,6 +3,8 @@ using System.IO;
 using System.Net.Http;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
 using Python.Runtime;
 
 namespace PythonNETExtensions
@@ -21,13 +23,12 @@ namespace PythonNETExtensions
         private struct Config
         {
             public bool BundlePython = true;
-            public string VirtualEnvironmentDirectory = "/venv";
+            public string VirtualEnvironmentDirectory = "./venv";
 
             public Config() { }
         }
         
-        [ModuleInitializer]
-        public static void Initialize()
+        public static async Task InitializeAsync()
         {
             Config config;
 
@@ -35,7 +36,7 @@ namespace PythonNETExtensions
             
             try
             {
-                config = JsonSerializer.Deserialize<Config>(File.ReadAllText(CONFIG_PATH));
+                config = JsonSerializer.Deserialize<Config>(await File.ReadAllTextAsync(CONFIG_PATH), J_OPTS);
             }
 
             catch (Exception exception)
@@ -43,10 +44,10 @@ namespace PythonNETExtensions
                 configException = exception;
                 goto CorruptedConfig;
             }
-
+            
             if (config.BundlePython)
             {
-                var venvPath = PythonEngine.PythonHome = config.VirtualEnvironmentDirectory;
+                var venvPath = config.VirtualEnvironmentDirectory;
 
                 if (venvPath == null)
                 {
@@ -58,23 +59,25 @@ namespace PythonNETExtensions
 
                 if (OperatingSystem.IsWindows())
                 {
-                    dllName = "python38.dll";
+                    dllName = "python310.dll";
                 }
             
                 else if (OperatingSystem.IsLinux())
                 {
-                    dllName = "libpython3.8.so";
+                    dllName = "libpython3.10.so";
                 }
 
                 else if (OperatingSystem.IsMacOS())
                 {
-                    dllName = "libpython3.8.dylib";
+                    dllName = "libpython3.10.dylib";
                 }
 
                 else
                 {
                     throw new PlatformNotSupportedException();
                 }
+                
+                var dllPath = Runtime.PythonDLL = $"{venvPath}/{dllName}";
 
                 if (!Directory.Exists(venvPath))
                 {
@@ -82,28 +85,34 @@ namespace PythonNETExtensions
                     goto Download;
                 }
 
-                var dllPath = Runtime.PythonDLL = $"{venvPath}/{dllName}";
-
                 if (File.Exists(dllPath))
                 {
                     goto DownloadComplete;
                 }
                 
                 Download:
-                var packagesDirectory = $"{venvPath}/site-packages";
-
-                var packagesDirectoryStream = File.Open(packagesDirectory, FileMode.OpenOrCreate, FileAccess.ReadWrite);
+                // var packagesDirectory = $"{venvPath}/site-packages";
+                
+                var dllStream = File.Open(dllPath, FileMode.OpenOrCreate, FileAccess.ReadWrite);
                 
                 const string DOWNLOAD_PREFIX = "https://github.com/budgetdevv/PythonNETExtensions/raw/main/DLLs";
 
                 var downloadURL = $"{DOWNLOAD_PREFIX}/{dllName}";
                 
                 var httpClient = new HttpClient();
+                
+                Console.WriteLine(downloadURL);
+                Console.WriteLine(venvPath);
+                
+                await httpClient.DownloadFileAsync(downloadURL, dllStream);
 
-                httpClient.DownloadWithProgressAsync(downloadURL, packagesDirectoryStream).Wait();
+                DownloadComplete:
+                Console.WriteLine(dllPath);
+                Console.WriteLine(venvPath);
+                
+                PythonEngine.PythonHome = venvPath;
             }
             
-            DownloadComplete:
             PythonEngine.Initialize();
             PythonEngine.BeginAllowThreads();
             
@@ -121,7 +130,7 @@ namespace PythonNETExtensions
                 File.Move(CONFIG_PATH, CONFIG_BACKUP_PATH);
             }
             
-            File.WriteAllText(CONFIG_PATH, JsonSerializer.Serialize<Config>(new Config()));
+            await File.WriteAllTextAsync(CONFIG_PATH, JsonSerializer.Serialize<Config>(new Config(), J_OPTS));
             Environment.Exit(0);
         }
     }
