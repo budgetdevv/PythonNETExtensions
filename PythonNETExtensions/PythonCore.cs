@@ -9,8 +9,8 @@ namespace PythonNETExtensions
 {
     public static class PythonCore
     {
-        private const string CONFIG_PATH = "/PythonExtsConfig.json",
-                             CONFIG_BACKUP_PATH = "/PythonExtsConfig_BAK.json";
+        private const string CONFIG_PATH = "PythonExtsConfig.json",
+                             CONFIG_BACKUP_PATH = "PythonExtsConfig_BAK.json";
 
         private static readonly JsonSerializerOptions J_OPTS = new JsonSerializerOptions()
         {
