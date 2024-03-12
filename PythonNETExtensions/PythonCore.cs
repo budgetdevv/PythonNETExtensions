@@ -1,9 +1,7 @@
 using System;
 using System.IO;
 using System.Net.Http;
-using System.Runtime.CompilerServices;
 using System.Text.Json;
-using System.Threading;
 using System.Threading.Tasks;
 using Python.Runtime;
 
@@ -59,17 +57,17 @@ namespace PythonNETExtensions
 
                 if (OperatingSystem.IsWindows())
                 {
-                    dllName = "python310.dll";
+                    dllName = "python311.dll";
                 }
             
                 else if (OperatingSystem.IsLinux())
                 {
-                    dllName = "libpython3.10.so";
+                    dllName = "libpython3.11.so";
                 }
 
                 else if (OperatingSystem.IsMacOS())
                 {
-                    dllName = "libpython3.10.dylib";
+                    dllName = "libpython3.11.dylib";
                 }
 
                 else
