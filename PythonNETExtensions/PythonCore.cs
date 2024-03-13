@@ -5,6 +5,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Python.Runtime;
 using PythonNETExtensions.Helpers;
+using PythonNETExtensions.PythonVersions;
 
 namespace PythonNETExtensions
 {
@@ -28,7 +29,7 @@ namespace PythonNETExtensions
             public Config() { }
         }
         
-        public static async Task InitializeAsync()
+        public static async Task InitializeAsync<PyVersionT>() where PyVersionT: struct, IPythonVersion
         {
             Config config;
 
@@ -66,34 +67,11 @@ namespace PythonNETExtensions
             
             var pythonBundleZipStream = File.OpenWrite(pythonBundleZipPath);
 
-            string pythonBundleDownloadURL;
-
             if (true)
             {
-                // All bundles are 3.11, for now.
-                if (OperatingSystem.IsMacOS())
-                {
-                    pythonBundleDownloadURL = "https://drive.usercontent.google.com/download?id=1v-ddEOnkNszZGhXmh1UQjCvYfRAfS4Kc&export=download&authuser=1&confirm=t&uuid=d9817ef1-7a5f-41ce-8b9d-1cdc88f07641&at=APZUnTUxuSG3nFARelCdTsSvPfoi%3A1710318036536";
-                }
-            
-                else if (OperatingSystem.IsWindows())
-                {
-                    pythonBundleDownloadURL = "";
-                }
-
-                else if (OperatingSystem.IsLinux())
-                {
-                    pythonBundleDownloadURL = "";
-                }
-
-                else
-                {
-                    throw new PlatformNotSupportedException();
-                }
-                
                 Console.WriteLine("Downloading python bundle...");
             
-                await httpClient.DownloadFileAsync(pythonBundleDownloadURL, pythonBundleZipStream, progress: new Progress<float>(p => Console.WriteLine($"Download progress: {p * 100}%")));
+                await httpClient.DownloadFileAsync(IPythonVersion.GetPythonBundleDownloadURL<PyVersionT>(), pythonBundleZipStream, progress: new Progress<float>(p => Console.WriteLine($"Download progress: {p * 100}%")));
                 
                 Console.WriteLine("Download complete!");
             }
@@ -109,6 +87,12 @@ namespace PythonNETExtensions
             await pythonBundleZipStream.UnzipAsync(pythonBundleDirectory);
             
             Console.WriteLine("Unzip complete!");
+            
+            Console.WriteLine("Deleting temp files...");
+            
+            File.Delete(pythonBundleZipPath);
+            
+            Console.WriteLine("Delete complete!");
             
             SkipDownload:
             Runtime.PythonDLL = $"{pythonBundleDirectory}/Python";

@@ -1,5 +1,6 @@
 ﻿using System.Threading.Tasks;
 using PythonNETExtensions;
+using PythonNETExtensions.PythonVersions;
 
 namespace ConsoleTest
 {
@@ -7,7 +8,7 @@ namespace ConsoleTest
     {
         private static async Task Main(string[] args)
         {
-            await PythonCore.InitializeAsync();
+            await PythonCore.InitializeAsync<PyVer3_11>();
         }
     }
 }
