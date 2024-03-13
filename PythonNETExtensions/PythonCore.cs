@@ -4,13 +4,15 @@ using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Python.Runtime;
+using PythonNETExtensions.Helpers;
 
 namespace PythonNETExtensions
 {
     public static class PythonCore
     {
         private const string CONFIG_PATH = "PythonExtsConfig.json",
-                             CONFIG_BACKUP_PATH = "PythonExtsConfig_BAK.json";
+                             CONFIG_BACKUP_PATH = "PythonExtsConfig_BAK.json",
+                             PYTHON_BUNDLE_NAME = "PythonBundle";
 
         private static readonly JsonSerializerOptions J_OPTS = new JsonSerializerOptions()
         {
@@ -20,8 +22,8 @@ namespace PythonNETExtensions
         
         private struct Config
         {
-            public bool BundlePython = true;
-            public string VirtualEnvironmentDirectory = "./venv";
+            public string PythonBundleDirectory = "./";
+            public string VirtualEnvironmentDirectory = "./";
 
             public Config() { }
         }
@@ -42,32 +44,46 @@ namespace PythonNETExtensions
                 configException = exception;
                 goto CorruptedConfig;
             }
-            
-            if (config.BundlePython)
+
+            var httpClient = new HttpClient();
+
+            var pythonBundleDirectory = config.PythonBundleDirectory;
+
+            if (pythonBundleDirectory == null)
             {
-                var venvPath = config.VirtualEnvironmentDirectory;
+                configException = new NullReferenceException(nameof(pythonBundleDirectory));
+                goto CorruptedConfig;
+            }
+            
+            pythonBundleDirectory = $"{pythonBundleDirectory}/{PYTHON_BUNDLE_NAME}";
 
-                if (venvPath == null)
+            if (Directory.Exists(pythonBundleDirectory))
+            {
+                Console.WriteLine("Existing python bundle found!");
+                goto SkipDownload;
+            }
+            var pythonBundleZipPath = $"{pythonBundleDirectory}.zip";
+            
+            var pythonBundleZipStream = File.OpenWrite(pythonBundleZipPath);
+
+            string pythonBundleDownloadURL;
+
+            if (true)
+            {
+                // All bundles are 3.11, for now.
+                if (OperatingSystem.IsMacOS())
                 {
-                    configException = new NullReferenceException($"{nameof(config.VirtualEnvironmentDirectory)} may not be null!");
-                    goto CorruptedConfig;
-                }
-
-                string dllName;
-
-                if (OperatingSystem.IsWindows())
-                {
-                    dllName = "python311.dll";
+                    pythonBundleDownloadURL = "https://drive.usercontent.google.com/download?id=1v-ddEOnkNszZGhXmh1UQjCvYfRAfS4Kc&export=download&authuser=1&confirm=t&uuid=d9817ef1-7a5f-41ce-8b9d-1cdc88f07641&at=APZUnTUxuSG3nFARelCdTsSvPfoi%3A1710318036536";
                 }
             
+                else if (OperatingSystem.IsWindows())
+                {
+                    pythonBundleDownloadURL = "";
+                }
+
                 else if (OperatingSystem.IsLinux())
                 {
-                    dllName = "libpython3.11.so";
-                }
-
-                else if (OperatingSystem.IsMacOS())
-                {
-                    dllName = "libpython3.11.dylib";
+                    pythonBundleDownloadURL = "";
                 }
 
                 else
@@ -75,41 +91,27 @@ namespace PythonNETExtensions
                     throw new PlatformNotSupportedException();
                 }
                 
-                var dllPath = Runtime.PythonDLL = $"{venvPath}/{dllName}";
-
-                if (!Directory.Exists(venvPath))
-                {
-                    Directory.CreateDirectory(venvPath);
-                    goto Download;
-                }
-
-                if (File.Exists(dllPath))
-                {
-                    goto DownloadComplete;
-                }
+                Console.WriteLine("Downloading python bundle...");
+            
+                await httpClient.DownloadFileAsync(pythonBundleDownloadURL, pythonBundleZipStream, progress: new Progress<float>(p => Console.WriteLine($"Download progress: {p * 100}%")));
                 
-                Download:
-                // var packagesDirectory = $"{venvPath}/site-packages";
-                
-                var dllStream = File.Open(dllPath, FileMode.OpenOrCreate, FileAccess.ReadWrite);
-                
-                const string DOWNLOAD_PREFIX = "https://github.com/budgetdevv/PythonNETExtensions/raw/main/DLLs";
-
-                var downloadURL = $"{DOWNLOAD_PREFIX}/{dllName}";
-                
-                var httpClient = new HttpClient();
-                
-                Console.WriteLine(downloadURL);
-                Console.WriteLine(venvPath);
-                
-                await httpClient.DownloadFileAsync(downloadURL, dllStream);
-
-                DownloadComplete:
-                Console.WriteLine(dllPath);
-                Console.WriteLine(venvPath);
-                
-                PythonEngine.PythonHome = venvPath;
+                Console.WriteLine("Download complete!");
             }
+
+            await pythonBundleZipStream.DisposeAsync();
+            
+            Directory.CreateDirectory(pythonBundleDirectory);
+            
+            pythonBundleZipStream = File.OpenRead(pythonBundleZipPath);
+
+            Console.WriteLine("Unzipping python bundle...");
+
+            await pythonBundleZipStream.UnzipAsync(pythonBundleDirectory);
+            
+            Console.WriteLine("Unzip complete!");
+            
+            SkipDownload:
+            Runtime.PythonDLL = $"{pythonBundleDirectory}/Python";
             
             PythonEngine.Initialize();
             PythonEngine.BeginAllowThreads();
