@@ -95,7 +95,8 @@ namespace PythonNETExtensions
             Console.WriteLine("Delete complete!");
             
             SkipDownload:
-            Runtime.PythonDLL = $"{pythonBundleDirectory}/Python";
+            
+            Runtime.PythonDLL = $"{pythonBundleDirectory}/bin/Python3.11";
             
             PythonEngine.Initialize();
             PythonEngine.BeginAllowThreads();
