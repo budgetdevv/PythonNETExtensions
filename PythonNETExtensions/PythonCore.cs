@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Net.Http;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Python.Runtime;
@@ -27,6 +28,26 @@ namespace PythonNETExtensions
 
             public Config() { }
         }
+
+        // [ThreadStatic]
+        // private static HttpClient HttpClient;
+        //
+        // private static HttpClient ThreadLocalHttpClient
+        // {
+        //     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        //     get
+        //     {
+        //         return HttpClient ?? ConstructHttpClient();
+        //
+        //         [MethodImpl(MethodImplOptions.NoInlining)]
+        //         HttpClient ConstructHttpClient()
+        //         {
+        //             return new HttpClient();
+        //         }
+        //     }
+        // }
+        
+        public static readonly HttpClient HTTP_CLIENT = new HttpClient();
         
         public static async Task InitializeAsync<PyVersionT>() where PyVersionT: struct, IPythonVersion
         {
@@ -46,8 +67,6 @@ namespace PythonNETExtensions
             }
 
             var platformEmbeddable = IPythonVersion.GetPlatformEmbeddable<PyVersionT>();
-
-            var httpClient = new HttpClient();
 
             var pythonBundleDirectory = config.PythonBundleContainingDirectory;
 
@@ -72,7 +91,7 @@ namespace PythonNETExtensions
             {
                 Console.WriteLine("Downloading python bundle...");
             
-                await httpClient.DownloadFileAsync(platformEmbeddable.GetDownloadURLForCurrentArch(), pythonBundleZipStream, progress: new Progress<float>(p => Console.WriteLine($"Download progress: {p * 100}%")));
+                await HTTP_CLIENT.DownloadFileAsync(platformEmbeddable.GetDownloadURLForCurrentArch(), pythonBundleZipStream, progress: new Progress<float>(p => Console.WriteLine($"Download progress: {p * 100}%")));
                 
                 Console.WriteLine("Download complete!");
             }
