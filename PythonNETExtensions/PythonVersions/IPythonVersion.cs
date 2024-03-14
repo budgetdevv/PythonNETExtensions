@@ -14,31 +14,27 @@ namespace PythonNETExtensions.PythonVersions
         public static abstract PlatformEmbeddedPython LinuxEmbeddedPython { get; }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string GetPythonBundleDownloadURL<PyVersionT>() where PyVersionT: struct, IPythonVersion
+        public static PlatformEmbeddedPython GetPlatformEmbeddable<PyVersionT>() where PyVersionT: struct, IPythonVersion
         {
-            string pythonBundleDownloadURL;
-            
             if (OperatingSystem.IsMacOS())
             {
-                pythonBundleDownloadURL = PyVersionT.OSXEmbeddedPython.GetDownloadURLForCurrentArch();
+                return PyVersionT.OSXEmbeddedPython;
             }
             
             else if (OperatingSystem.IsWindows())
             {
-                pythonBundleDownloadURL = PyVersionT.WindowsEmbeddedPython.GetDownloadURLForCurrentArch();
+                return PyVersionT.WindowsEmbeddedPython;
             }
 
             else if (OperatingSystem.IsLinux())
             {
-                pythonBundleDownloadURL = PyVersionT.LinuxEmbeddedPython.GetDownloadURLForCurrentArch();
+                return PyVersionT.LinuxEmbeddedPython;
             }
 
             else
             {
                 throw new PlatformNotSupportedException();
             }
-
-            return pythonBundleDownloadURL;
         }
     }
 }
