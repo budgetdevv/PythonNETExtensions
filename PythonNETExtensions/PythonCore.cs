@@ -28,24 +28,6 @@ namespace PythonNETExtensions
 
             public Config() { }
         }
-
-        // [ThreadStatic]
-        // private static HttpClient HttpClient;
-        //
-        // private static HttpClient ThreadLocalHttpClient
-        // {
-        //     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        //     get
-        //     {
-        //         return HttpClient ?? ConstructHttpClient();
-        //
-        //         [MethodImpl(MethodImplOptions.NoInlining)]
-        //         HttpClient ConstructHttpClient()
-        //         {
-        //             return new HttpClient();
-        //         }
-        //     }
-        // }
         
         public static readonly HttpClient HTTP_CLIENT = new HttpClient();
         
