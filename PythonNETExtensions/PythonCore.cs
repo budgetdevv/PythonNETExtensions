@@ -23,8 +23,7 @@ namespace PythonNETExtensions
         
         private struct Config
         {
-            public string PythonBundleDirectory = "./";
-            public string VirtualEnvironmentDirectory = "./";
+            public string PythonBundleContainingDirectory = "./";
 
             public Config() { }
         }
@@ -46,9 +45,11 @@ namespace PythonNETExtensions
                 goto CorruptedConfig;
             }
 
+            var platformEmbeddable = IPythonVersion.GetPlatformEmbeddable<PyVersionT>();
+
             var httpClient = new HttpClient();
 
-            var pythonBundleDirectory = config.PythonBundleDirectory;
+            var pythonBundleDirectory = config.PythonBundleContainingDirectory;
 
             if (pythonBundleDirectory == null)
             {
@@ -56,7 +57,7 @@ namespace PythonNETExtensions
                 goto CorruptedConfig;
             }
             
-            pythonBundleDirectory = $"{pythonBundleDirectory}/{PYTHON_BUNDLE_NAME}";
+            pythonBundleDirectory = $"{pythonBundleDirectory}{PYTHON_BUNDLE_NAME}";
 
             if (Directory.Exists(pythonBundleDirectory))
             {
@@ -71,7 +72,7 @@ namespace PythonNETExtensions
             {
                 Console.WriteLine("Downloading python bundle...");
             
-                await httpClient.DownloadFileAsync(IPythonVersion.GetPythonBundleDownloadURL<PyVersionT>(), pythonBundleZipStream, progress: new Progress<float>(p => Console.WriteLine($"Download progress: {p * 100}%")));
+                await httpClient.DownloadFileAsync(platformEmbeddable.GetDownloadURLForCurrentArch(), pythonBundleZipStream, progress: new Progress<float>(p => Console.WriteLine($"Download progress: {p * 100}%")));
                 
                 Console.WriteLine("Download complete!");
             }
@@ -95,8 +96,9 @@ namespace PythonNETExtensions
             Console.WriteLine("Delete complete!");
             
             SkipDownload:
-            
-            Runtime.PythonDLL = $"{pythonBundleDirectory}/lib/";
+            Runtime.PythonDLL = $"{pythonBundleDirectory}{platformEmbeddable.DLLPathRelativeToPythonHome}";
+            // This must NOT be reordered before Runtime.PythonDLL, as there's a dependency on it.
+            PythonEngine.PythonHome = pythonBundleDirectory;
             
             PythonEngine.Initialize();
             PythonEngine.BeginAllowThreads();
