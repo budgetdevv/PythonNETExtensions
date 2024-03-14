@@ -96,7 +96,7 @@ namespace PythonNETExtensions
             
             SkipDownload:
             
-            Runtime.PythonDLL = $"{pythonBundleDirectory}/bin/Python3.11";
+            Runtime.PythonDLL = $"{pythonBundleDirectory}/lib/";
             
             PythonEngine.Initialize();
             PythonEngine.BeginAllowThreads();

@@ -5,9 +5,13 @@ namespace PythonNETExtensions.PythonVersions
 {
     public interface IPythonVersion
     {
-        public static abstract string OSXPythonBundleDownloadURL { get; }
-        public static abstract string WindowsPythonBundleDownloadURL { get; }
-        public static abstract string LinuxPythonBundleDownloadURL { get; }
+        public static abstract string VersionString { get; }
+        
+        public static abstract PlatformEmbeddedPython OSXEmbeddedPython { get; }
+        
+        public static abstract PlatformEmbeddedPython WindowsEmbeddedPython { get; }
+        
+        public static abstract PlatformEmbeddedPython LinuxEmbeddedPython { get; }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string GetPythonBundleDownloadURL<PyVersionT>() where PyVersionT: struct, IPythonVersion
@@ -16,17 +20,17 @@ namespace PythonNETExtensions.PythonVersions
             
             if (OperatingSystem.IsMacOS())
             {
-                pythonBundleDownloadURL = PyVersionT.OSXPythonBundleDownloadURL;
+                pythonBundleDownloadURL = PyVersionT.OSXEmbeddedPython.GetDownloadURLForCurrentArch();
             }
             
             else if (OperatingSystem.IsWindows())
             {
-                pythonBundleDownloadURL = PyVersionT.WindowsPythonBundleDownloadURL;
+                pythonBundleDownloadURL = PyVersionT.WindowsEmbeddedPython.GetDownloadURLForCurrentArch();
             }
 
             else if (OperatingSystem.IsLinux())
             {
-                pythonBundleDownloadURL = PyVersionT.LinuxPythonBundleDownloadURL;
+                pythonBundleDownloadURL = PyVersionT.LinuxEmbeddedPython.GetDownloadURLForCurrentArch();
             }
 
             else
