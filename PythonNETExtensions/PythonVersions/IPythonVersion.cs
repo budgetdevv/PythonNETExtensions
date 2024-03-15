@@ -36,5 +36,32 @@ namespace PythonNETExtensions.PythonVersions
                 throw new PlatformNotSupportedException();
             }
         }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static string GetDLLPath<PyVersionT>(string homePath) where PyVersionT: struct, IPythonVersion
+        {
+            if (OperatingSystem.IsMacOS())
+            {
+                return $"{homePath}/lib/libpython{PyVersionT.VersionString}.dylib";
+            }
+            
+            else if (OperatingSystem.IsWindows())
+            {
+                return $"{homePath}/lib/python{PyVersionT.VersionString.Replace(".", string.Empty)}.dll";
+            }
+            
+            else if (OperatingSystem.IsLinux())
+            {
+                return $"{homePath}/lib/libpython{PyVersionT.VersionString}.so";
+            }
+
+            throw new PlatformNotSupportedException();
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static string GetPackagesPath<PyVersionT>(string homePath) where PyVersionT: struct, IPythonVersion
+        {
+            return $"{homePath}/lib/python{PyVersionT.VersionString}/site-packages";
+        }
     }
 }

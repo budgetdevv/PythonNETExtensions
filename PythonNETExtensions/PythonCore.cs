@@ -30,6 +30,8 @@ namespace PythonNETExtensions
         }
         
         public static readonly HttpClient HTTP_CLIENT = new HttpClient();
+
+        private static string PackagesPath;
         
         public static async Task InitializeAsync<PyVersionT>() where PyVersionT: struct, IPythonVersion
         {
@@ -97,12 +99,14 @@ namespace PythonNETExtensions
             Console.WriteLine("Delete complete!");
             
             SkipDownload:
-            Runtime.PythonDLL = $"{pythonBundleDirectory}{platformEmbeddable.DLLPathRelativeToPythonHome}";
+            Runtime.PythonDLL = IPythonVersion.GetDLLPath<PyVer3_11>(pythonBundleDirectory);
             // This must NOT be reordered before Runtime.PythonDLL, as there's a dependency on it.
             PythonEngine.PythonHome = pythonBundleDirectory;
             
             PythonEngine.Initialize();
             PythonEngine.BeginAllowThreads();
+
+            PackagesPath = IPythonVersion.GetPackagesPath<PyVer3_11>(pythonBundleDirectory);
             
             return;
             

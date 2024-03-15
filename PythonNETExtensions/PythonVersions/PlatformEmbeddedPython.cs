@@ -5,15 +5,10 @@ namespace PythonNETExtensions.PythonVersions
 {
     public struct PlatformEmbeddedPython
     {
-        public readonly string DLLPathRelativeToPythonHome;
-        
-        public readonly string AMD64DownloadURL;
+        public readonly string AMD64DownloadURL, ARM64DownloadURL;
 
-        public readonly string ARM64DownloadURL;
-
-        public PlatformEmbeddedPython(string dllPathRelativeToPythonHome, string amd64DownloadUrl = null, string arm64DownloadUrl = null)
+        public PlatformEmbeddedPython(string amd64DownloadUrl = null, string arm64DownloadUrl = null)
         {
-            DLLPathRelativeToPythonHome = dllPathRelativeToPythonHome;
             AMD64DownloadURL = amd64DownloadUrl;
             ARM64DownloadURL = arm64DownloadUrl;
         }

@@ -10,7 +10,6 @@ namespace PythonNETExtensions.PythonVersions
 
         public static PlatformEmbeddedPython OSXEmbeddedPython => new PlatformEmbeddedPython
         (
-            dllPathRelativeToPythonHome: $"/lib/libpython{VersionString}.dylib",
             amd64DownloadUrl: MAC_UNIVERSAL_2DOWNLOAD_URL,
             arm64DownloadUrl: MAC_UNIVERSAL_2DOWNLOAD_URL
         );
