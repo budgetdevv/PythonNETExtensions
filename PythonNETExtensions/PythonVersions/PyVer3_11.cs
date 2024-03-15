@@ -14,8 +14,16 @@ namespace PythonNETExtensions.PythonVersions
             arm64DownloadUrl: MAC_UNIVERSAL_2DOWNLOAD_URL
         );
 
-        public static PlatformEmbeddedPython WindowsEmbeddedPython => throw new NotImplementedException();
+        public static PlatformEmbeddedPython WindowsEmbeddedPython => new PlatformEmbeddedPython
+        (
+            amd64DownloadUrl: $"https://github.com/budgetdevv/PythonNETExtensions/raw/main/Bundles/{VersionString}/Windows/AMD64/PythonBundle.zip",
+            arm64DownloadUrl: null
+        );
         
-        public static PlatformEmbeddedPython LinuxEmbeddedPython => throw new NotImplementedException();
+        public static PlatformEmbeddedPython LinuxEmbeddedPython => new PlatformEmbeddedPython
+        (
+            amd64DownloadUrl: null,
+            arm64DownloadUrl: $"https://github.com/budgetdevv/PythonNETExtensions/raw/main/Bundles/{VersionString}/Linux/ARM64/PythonBundle.zip"
+        );
     }
 }
