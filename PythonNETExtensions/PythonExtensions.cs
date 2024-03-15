@@ -1,4 +1,5 @@
 using Python.Runtime;
+using PythonNETExtensions.Modules;
 
 namespace PythonNETExtensions
 {
