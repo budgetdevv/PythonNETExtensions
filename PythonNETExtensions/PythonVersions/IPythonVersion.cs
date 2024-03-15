@@ -47,7 +47,7 @@ namespace PythonNETExtensions.PythonVersions
             
             else if (OperatingSystem.IsWindows())
             {
-                return $"{homePath}/lib/python{PyVersionT.VersionString.Replace(".", string.Empty)}.dll";
+                return $"{homePath}/python{PyVersionT.VersionString.Replace(".", string.Empty)}.dll";
             }
             
             else if (OperatingSystem.IsLinux())
