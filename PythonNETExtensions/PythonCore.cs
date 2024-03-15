@@ -89,6 +89,8 @@ namespace PythonNETExtensions
             Console.WriteLine("Unzipping python bundle...");
 
             await pythonBundleZipStream.UnzipAsync(pythonBundleDirectory);
+
+            await pythonBundleZipStream.DisposeAsync();
             
             Console.WriteLine("Unzip complete!");
             
