@@ -1,11 +1,15 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Python.Runtime;
 using PythonNETExtensions.Helpers;
+using PythonNETExtensions.Modules;
 using PythonNETExtensions.PythonVersions;
 
 namespace PythonNETExtensions
@@ -29,7 +33,7 @@ namespace PythonNETExtensions
             public Config() { }
         }
         
-        public static readonly HttpClient HTTP_CLIENT = new HttpClient();
+        private static readonly HttpClient HTTP_CLIENT = new HttpClient();
 
         private static string PackagesPath;
         
@@ -126,6 +130,38 @@ namespace PythonNETExtensions
             
             await File.WriteAllTextAsync(CONFIG_PATH, JsonSerializer.Serialize<Config>(new Config(), J_OPTS));
             Environment.Exit(0);
+        }
+
+        public static string[] PythonPackages { get; private set; }
+        
+        public static async Task InitializeDependentPackages()
+        {
+            // TODO: Consider asynchronous awaiting of pip process
+            await Task.Yield();
+            
+            var pythonModuleBaseType = typeof(IPythonModule);
+
+            var modules = typeof(PythonCore).Assembly
+                .GetTypes()
+                .Where(x => x.IsValueType && x.GetInterfaces().Contains(pythonModuleBaseType))
+                .ToArray();
+
+            var bindingFlags = BindingFlags.Static | BindingFlags.Public;
+
+            var packages = new HashSet<string>(modules.Length);
+            
+            foreach (var module in modules)
+            {
+                var package = module.GetProperty(nameof(IPythonModule.DependentPackage), bindingFlags);
+
+                // TODO: Are pip packages case insensitive?
+                if (package != null && packages.Add(Unsafe.As<string>(package)))
+                {
+                    // Download
+                }
+            }
+
+            PythonPackages = packages.ToArray();
         }
     }
 }
