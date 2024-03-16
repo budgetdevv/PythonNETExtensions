@@ -17,9 +17,9 @@ namespace ConsoleTest
         
         private static async Task Main(string[] args)
         {
-            var core = PythonCore<PyVer3_11, DefaultPythonConfig>.INSTANCE;
-            await core.InitializeAsync();
-            await core.InitializeDependentPackages();
+            var pythonCore = PythonCore<PyVer3_11, DefaultPythonConfig>.INSTANCE;
+            await pythonCore.InitializeAsync();
+            await pythonCore.InitializeDependentPackages();
 
             using (new PythonHandle())
             {

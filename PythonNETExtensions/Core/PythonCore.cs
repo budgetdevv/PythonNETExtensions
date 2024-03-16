@@ -7,6 +7,7 @@ using System.Net.Http;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using Python.Runtime;
 using PythonNETExtensions.Helpers;
@@ -16,15 +17,50 @@ using PythonNETExtensions.PythonVersions;
 
 namespace PythonNETExtensions.Core
 {
+    internal static class PythonInstance
+    {
+        private static int InstanceCount = 0;
+
+        public static void OnCreate()
+        {
+            if (Interlocked.Increment(ref InstanceCount) == 1)
+            {
+                return;
+            }
+
+            throw new Exception("There may only be 1 PythonCore instance!");
+        }
+    }
+    
     public class PythonCore<PyVersionT, PyConfigT>
         where PyVersionT: struct, IPythonVersion<PyVersionT>
         where PyConfigT: struct, IPythonConfig<PyConfigT>
     {
         public static readonly PythonCore<PyVersionT, PyConfigT> INSTANCE = new PythonCore<PyVersionT, PyConfigT>();
 
+        static PythonCore()
+        {
+            PythonInstance.OnCreate();
+        }
+        
         private PythonCore() { }
         
         private static readonly HttpClient HTTP_CLIENT = new HttpClient();
+        
+        private enum InitializationState: int
+        {
+            Uninitialized = 0,
+            Initialized = -1
+        }
+
+        private static int IsInitialized = (int) InitializationState.Uninitialized;
+        
+        private static bool TryInitialize()
+        {
+            var oldVal = (InitializationState) Interlocked.CompareExchange(ref IsInitialized, (int) InitializationState.Initialized, (int) InitializationState.Uninitialized);
+
+            return oldVal == InitializationState.Uninitialized;
+        }
 
         public Task InitializeAsync()
         {
@@ -36,6 +72,8 @@ namespace PythonNETExtensions.Core
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         private static async Task InitializeAsyncInternal()
         {
+            TryInitialize();
+            
             var pythonBundleDirectory = PyConfigT.PythonHomePath;
 
             if (Directory.Exists(pythonBundleDirectory))
@@ -97,6 +135,11 @@ namespace PythonNETExtensions.Core
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         private static async Task InitializeDependentPackagesInternal()
         {
+            if ((InitializationState) IsInitialized == InitializationState.Uninitialized)
+            {
+                throw new Exception($"Please run {nameof(InitializeAsync)}() first!");
+            }
+            
             // Apparently this causes stackoverflow when PythonExtensions.GetCachedPythonModule<>() is invoked...
             // // TODO: Consider asynchronous awaiting of pip process
             // await Task.Yield();
