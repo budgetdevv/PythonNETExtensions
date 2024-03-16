@@ -1,19 +1,38 @@
-﻿using System.Threading.Tasks;
-using Python.Runtime;
-using PythonNETExtensions;
+﻿using System;
+using System.Threading.Tasks;
+using PythonNETExtensions.Core;
+using PythonNETExtensions.Modules;
+using PythonNETExtensions.PythonConfig;
 using PythonNETExtensions.PythonVersions;
 
 namespace ConsoleTest
 {
     internal static class Program
     {
+        public struct Numpy: IPythonModule<Numpy>
+        {
+            public static string DependentPackage => "numpy";
+            public static string ModuleName => DependentPackage;
+        }
+        
         private static async Task Main(string[] args)
         {
-            await PythonCore.InitializeAsync<PyVer3_11>();
+            var core = PythonCore<PyVer3_11, DefaultPythonConfig>.INSTANCE;
+            await core.InitializeAsync();
+            await core.InitializeDependentPackages();
 
             using (new PythonHandle())
             {
-                PythonEngine.Eval("print('Hello world')");
+                // Compile method
+                const string TEXT_PARAM_NAME = "text";
+                var method = new PythonMethodHandle([ TEXT_PARAM_NAME ], $"print({TEXT_PARAM_NAME})");
+                method.Method("Hello world!");
+
+                var np = PythonExtensions.GetCachedPythonModule<Numpy>();
+                Console.WriteLine(np.array((int[]) [1, 2, 3, 4, 5]));
+                
+                var sys = PythonExtensions.GetCachedPythonModule<SysModule>();
+                Console.WriteLine(sys.path);
             }
         }
     }

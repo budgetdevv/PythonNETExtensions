@@ -2,7 +2,7 @@ using System;
 
 namespace PythonNETExtensions.PythonVersions
 {
-    public readonly struct PyVer3_11: IPythonVersion
+    public readonly struct PyVer3_11: IPythonVersion<PyVer3_11>
     {
         public static string VersionString => "3.11";
         

@@ -1,7 +1,7 @@
 ﻿using System;
 using Python.Runtime;
 
-namespace PythonNETExtensions
+namespace PythonNETExtensions.Core
 {
     public readonly struct LongRunningCSharpRegion: IDisposable
     {

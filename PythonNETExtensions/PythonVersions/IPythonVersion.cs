@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 
 namespace PythonNETExtensions.PythonVersions
 {
-    public interface IPythonVersion
+    public interface IPythonVersion<PyVersionT> where PyVersionT: struct, IPythonVersion<PyVersionT>
     {
         public static abstract string VersionString { get; }
         
@@ -14,7 +14,7 @@ namespace PythonNETExtensions.PythonVersions
         public static abstract PlatformEmbeddedPython LinuxEmbeddedPython { get; }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static PlatformEmbeddedPython GetPlatformEmbeddable<PyVersionT>() where PyVersionT: struct, IPythonVersion
+        public static virtual PlatformEmbeddedPython GetPlatformEmbeddable()
         {
             if (OperatingSystem.IsMacOS())
             {
@@ -38,30 +38,56 @@ namespace PythonNETExtensions.PythonVersions
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string GetDLLPath<PyVersionT>(string homePath) where PyVersionT: struct, IPythonVersion
+        public static virtual string GetDLLPath(string homePath)
         {
             if (OperatingSystem.IsMacOS())
             {
-                return $"{homePath}/lib/libpython{PyVersionT.VersionString}.dylib";
+                return $"{homePath}lib/libpython{PyVersionT.VersionString}.dylib";
             }
             
             else if (OperatingSystem.IsWindows())
             {
-                return $"{homePath}/python{PyVersionT.VersionString.Replace(".", string.Empty)}.dll";
+                return $"{homePath}python{PyVersionT.VersionString.Replace(".", string.Empty)}.dll";
             }
             
             else if (OperatingSystem.IsLinux())
             {
-                return $"{homePath}/lib/libpython{PyVersionT.VersionString}.so";
+                return $"{homePath}lib/libpython{PyVersionT.VersionString}.so";
             }
 
             throw new PlatformNotSupportedException();
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static virtual string GetPipExecutablePath(string homePath)
+        {
+            if (OperatingSystem.IsMacOS() || OperatingSystem.IsLinux())
+            {
+                return $"{homePath}bin/pip3";
+            }
+
+            else if (OperatingSystem.IsWindows())
+            {
+                // TODO: Implement
+            }
+            
+            throw new PlatformNotSupportedException();
+        }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string GetPackagesPath<PyVersionT>(string homePath) where PyVersionT: struct, IPythonVersion
+        public static virtual string GetPackagesPath(string homePath)
         {
-            return $"{homePath}/lib/python{PyVersionT.VersionString}/site-packages";
+            if (OperatingSystem.IsMacOS() || OperatingSystem.IsLinux())
+            {
+                return $"{homePath}lib/python{PyVersionT.VersionString}/site-packages";
+            }
+
+            else if (OperatingSystem.IsWindows())
+            {
+                // TODO: Implement
+            }
+            
+            throw new PlatformNotSupportedException();
         }
     }
 }
