@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Python.Runtime;
+using PythonNETExtensions.Awaiters;
 using PythonNETExtensions.Core;
 using PythonNETExtensions.Modules;
 using PythonNETExtensions.PythonConfig;
@@ -21,15 +23,21 @@ namespace ConsoleTest
             await pythonCore.InitializeAsync();
             await pythonCore.InitializeDependentPackages();
 
+            Console.WriteLine(Environment.CurrentManagedThreadId);
+            
+            await new PythonNewThreadAwaiter();
+            
+            Console.WriteLine(Environment.CurrentManagedThreadId);
+            
             using (new PythonHandle())
             {
                 // Compile method
                 const string TEXT_PARAM_NAME = "text";
                 var method = new PythonMethodHandle([ TEXT_PARAM_NAME ], $"print({TEXT_PARAM_NAME})");
                 method.Method("Hello world!");
-
+                
                 // Numpy module
-                var np = PythonExtensions.GetCachedPythonModule<Numpy>();
+                dynamic np = PythonExtensions.GetCachedPythonModule<Numpy>();
                 Console.WriteLine(np.array((int[]) [1, 2, 3, 4, 5]));
                 
                 var sys = PythonExtensions.GetCachedPythonModule<SysModule>();

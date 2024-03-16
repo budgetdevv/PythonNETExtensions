@@ -161,16 +161,23 @@ namespace PythonNETExtensions.Core
 
             var pipExecutablePath = PyVersionT.GetPipExecutablePath(homePath);
             var pipPackagesPath = PyVersionT.GetPackagesPath(homePath);
-            
-            foreach (var module in modules)
+
+            // Initializing the module cache uses Py code, which means we need to take the GIL
+            using (new PythonHandle())
             {
-                // Has nothing to do with MainModule - it is just a generic argument required to satisfy the compiler
-                var packageName = Unsafe.As<string>(module.GetProperty(nameof(IPythonModule<MainModule>.DependentPackage), bindingFlags)!.GetValue(null));
-                
-                // TODO: Are pip packages case insensitive?
-                if (!string.IsNullOrWhiteSpace(packageName))
+                foreach (var module in modules)
                 {
-                    InstallPackage(packageName, pipExecutablePath, pipPackagesPath);
+                    // Has nothing to do with MainModule - it is just a generic argument required to satisfy the compiler
+                    var packageName = Unsafe.As<string>(module.GetProperty(nameof(IPythonModule<MainModule>.DependentPackage), bindingFlags)!.GetValue(null));
+                
+                    // TODO: Are pip packages case insensitive?
+                    if (!string.IsNullOrWhiteSpace(packageName))
+                    {
+                        InstallPackage(packageName, pipExecutablePath, pipPackagesPath);
+                    }
+                    
+                    // Initialize module cache
+                    RuntimeHelpers.RunClassConstructor(typeof(IPythonModule<>).MakeGenericType(module).TypeHandle);
                 }
             }
 
