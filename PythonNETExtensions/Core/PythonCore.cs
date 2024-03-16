@@ -139,16 +139,20 @@ namespace PythonNETExtensions.Core
         private static void InstallPackage(string packageName, string pipExecutablePath, string pipPackagesPath)
         {
             Console.WriteLine($"Installing {packageName}...");
+
+            var span = pipExecutablePath.AsSpan();
+            var index =span.LastIndexOf('/');
             
             // Define the process start information
             var startInfo = new ProcessStartInfo
             {
-                FileName = pipExecutablePath,
+                FileName = span.Slice(index + 1).ToString(),
                 Arguments = $"install {packageName} --target {pipPackagesPath}",
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 CreateNoWindow = true,
+                WorkingDirectory = span.Slice(0, index).ToString()
             };
 
             // Create and start the process
