@@ -28,6 +28,7 @@ namespace ConsoleTest
                 var method = new PythonMethodHandle([ TEXT_PARAM_NAME ], $"print({TEXT_PARAM_NAME})");
                 method.Method("Hello world!");
 
+                // Numpy module
                 var np = PythonExtensions.GetCachedPythonModule<Numpy>();
                 Console.WriteLine(np.array((int[]) [1, 2, 3, 4, 5]));
                 
