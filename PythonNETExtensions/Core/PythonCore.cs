@@ -43,7 +43,7 @@ namespace PythonNETExtensions.Core
                 Console.WriteLine("Existing python bundle found!");
                 goto SkipDownload;
             }
-            var pythonBundleZipPath = $"{pythonBundleDirectory}.zip";
+            var pythonBundleZipPath = $"{PyConfigT.PythonBundleContainingDirectory}PythonBundle.zip";
             
             var pythonBundleZipStream = File.OpenWrite(pythonBundleZipPath);
 
