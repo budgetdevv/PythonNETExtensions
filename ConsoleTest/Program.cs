@@ -4,6 +4,7 @@ using Python.Runtime;
 using PythonNETExtensions.Awaiters;
 using PythonNETExtensions.Core;
 using PythonNETExtensions.Modules;
+using PythonNETExtensions.Modules.PythonBuiltIn;
 using PythonNETExtensions.PythonConfig;
 using PythonNETExtensions.PythonVersions;
 
@@ -19,29 +20,26 @@ namespace ConsoleTest
         
         private static async Task Main(string[] args)
         {
-            var pythonCore = PythonCore<PyVer3_11, DefaultPythonConfig>.INSTANCE;
+            var pythonCore = PythonCore<PyVer3_11<DefaultPythonConfig>, DefaultPythonConfig>.INSTANCE;
             await pythonCore.InitializeAsync();
             await pythonCore.InitializeDependentPackages();
-
-            Console.WriteLine(Environment.CurrentManagedThreadId);
-            
-            await new PythonNewThreadAwaiter();
-            
-            Console.WriteLine(Environment.CurrentManagedThreadId);
             
             using (new PythonHandle())
             {
-                // Compile method
-                const string TEXT_PARAM_NAME = "text";
-                var method = new PythonMethodHandle([ TEXT_PARAM_NAME ], $"print({TEXT_PARAM_NAME})");
-                method.Method("Hello world!");
+                var helloWorldText = "Hello World!";
+                
+                new PythonMethodHandle
+                (
+                    parameters: [ nameof(helloWorldText) ],
+                    methodBody: 
+                    $"""
+                    print({nameof(helloWorldText)});
+                    """
+                ).Method(helloWorldText);
                 
                 // Numpy module
-                dynamic np = PythonExtensions.GetCachedPythonModule<Numpy>();
+                dynamic np = PythonExtensions.GetPythonModule<Numpy>();
                 Console.WriteLine(np.array((int[]) [1, 2, 3, 4, 5]));
-                
-                var sys = PythonExtensions.GetCachedPythonModule<SysModule>();
-                Console.WriteLine(sys.path);
             }
         }
     }

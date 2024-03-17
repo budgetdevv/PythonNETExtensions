@@ -1,4 +1,4 @@
-using Python.Runtime;
+using System;
 
 namespace PythonNETExtensions.Modules
 {
@@ -7,14 +7,24 @@ namespace PythonNETExtensions.Modules
         // Tag interface for reflection 
     }
     
-    public interface IPythonModule<PythonModuleT>: IPythonModuleBase where PythonModuleT: struct, IPythonModule<PythonModuleT>
+    public interface IPythonModule<PyModuleT>: IPythonModuleBase where PyModuleT: struct, IPythonModule<PyModuleT>
     {
         public static abstract string DependentPackage { get; }
         
         public static abstract string ModuleName { get; }
-        
-        private static readonly PyObject MODULE_CACHE = Py.Import(PythonModuleT.ModuleName);
 
-        public static virtual dynamic ModuleCache => MODULE_CACHE;
+        public static virtual dynamic ModuleCache => ModuleCache<PyModuleT>.CACHED_MODULE;
+    }
+    
+    public interface IPythonBuiltInModule<PyModuleT>: IPythonModule<PyModuleT> where PyModuleT: struct, IPythonModule<PyModuleT>
+    {
+        static string IPythonModule<PyModuleT>.DependentPackage => null;
+    }
+
+    public interface IPythonConcreteModule<PyModuleT> where PyModuleT: struct, IPythonConcreteModule<PyModuleT>, IPythonModule<PyModuleT>
+    {
+        public static abstract PyModuleT ConstructConcreteModule(dynamic moduleCache);
+        
+        public dynamic Module { get; init; }
     }
 }

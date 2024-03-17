@@ -6,9 +6,16 @@ namespace PythonNETExtensions.Core
     public static class PythonExtensions
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static dynamic GetCachedPythonModule<PythonModuleT>() where PythonModuleT : struct, IPythonModule<PythonModuleT>
+        public static dynamic GetPythonModule<PythonModuleT>() where PythonModuleT: struct, IPythonModule<PythonModuleT>
         {
             return PythonModuleT.ModuleCache;
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static PythonModuleT GetConcretePythonModule<PythonModuleT>() 
+            where PythonModuleT: struct, IPythonConcreteModule<PythonModuleT>, IPythonModule<PythonModuleT>
+        {
+            return PythonModuleT.ConstructConcreteModule(PythonModuleT.ModuleCache);
         }
     }
 }

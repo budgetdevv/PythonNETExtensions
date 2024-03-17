@@ -1,3 +1,5 @@
+using System.IO;
+
 namespace PythonNETExtensions.PythonConfig
 {
     public interface IPythonConfig<PyConfigT> where PyConfigT: struct, IPythonConfig<PyConfigT>
@@ -6,6 +8,6 @@ namespace PythonNETExtensions.PythonConfig
         
         public static abstract string PythonBundleDirectoryName { get; }
 
-        public static virtual string PythonHomePath => $"{PyConfigT.PythonBundleContainingDirectory}{PyConfigT.PythonBundleDirectoryName}/";
+        public static virtual string PythonHomePath => Path.Combine(PyConfigT.PythonBundleContainingDirectory, PyConfigT.PythonBundleDirectoryName);
     }
 }

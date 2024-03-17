@@ -1,8 +1,10 @@
 using System;
+using PythonNETExtensions.PythonConfig;
 
 namespace PythonNETExtensions.PythonVersions
 {
-    public readonly struct PyVer3_11: IPythonVersion<PyVer3_11>
+    public readonly struct PyVer3_11<PyConfigT>: IPythonVersion<PyVer3_11<PyConfigT>, PyConfigT> 
+        where PyConfigT : struct, IPythonConfig<PyConfigT>
     {
         public static string VersionString => "3.11";
         
