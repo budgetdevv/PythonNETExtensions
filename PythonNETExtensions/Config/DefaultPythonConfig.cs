@@ -1,4 +1,4 @@
-namespace PythonNETExtensions.PythonConfig
+namespace PythonNETExtensions.Config
 {
     public struct DefaultPythonConfig: IPythonConfig<DefaultPythonConfig>
     {

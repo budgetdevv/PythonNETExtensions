@@ -10,11 +10,11 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Python.Runtime;
+using PythonNETExtensions.Config;
 using PythonNETExtensions.Helpers;
 using PythonNETExtensions.Modules;
 using PythonNETExtensions.Modules.PythonBuiltIn;
-using PythonNETExtensions.PythonConfig;
-using PythonNETExtensions.PythonVersions;
+using PythonNETExtensions.Versions;
 
 namespace PythonNETExtensions.Core
 {

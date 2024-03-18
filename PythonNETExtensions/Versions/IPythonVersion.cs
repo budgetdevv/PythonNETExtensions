@@ -2,9 +2,9 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
-using PythonNETExtensions.PythonConfig;
+using PythonNETExtensions.Config;
 
-namespace PythonNETExtensions.PythonVersions
+namespace PythonNETExtensions.Versions
 {
     public interface IPythonVersion<PyVersionT, PyConfigT>
         where PyVersionT: struct, IPythonVersion<PyVersionT, PyConfigT>

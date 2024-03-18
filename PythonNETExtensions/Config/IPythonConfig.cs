@@ -1,6 +1,6 @@
 using System.IO;
 
-namespace PythonNETExtensions.PythonConfig
+namespace PythonNETExtensions.Config
 {
     public interface IPythonConfig<PyConfigT> where PyConfigT: struct, IPythonConfig<PyConfigT>
     {

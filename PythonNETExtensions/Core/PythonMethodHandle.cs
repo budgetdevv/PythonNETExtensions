@@ -2,7 +2,6 @@
 using System.Runtime.CompilerServices;
 using System.Threading;
 using Python.Runtime;
-using PythonNETExtensions.Modules;
 using PythonNETExtensions.Modules.PythonBuiltIn;
 
 namespace PythonNETExtensions.Core

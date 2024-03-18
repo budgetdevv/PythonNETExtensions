@@ -2,11 +2,11 @@
 using System.Threading.Tasks;
 using Python.Runtime;
 using PythonNETExtensions.Awaiters;
+using PythonNETExtensions.Config;
 using PythonNETExtensions.Core;
 using PythonNETExtensions.Modules;
 using PythonNETExtensions.Modules.PythonBuiltIn;
-using PythonNETExtensions.PythonConfig;
-using PythonNETExtensions.PythonVersions;
+using PythonNETExtensions.Versions;
 
 namespace ConsoleTest
 {
@@ -27,15 +27,16 @@ namespace ConsoleTest
             using (new PythonHandle())
             {
                 var helloWorldText = "Hello World!";
+
+                var sys = PythonExtensions.GetPythonModule<SysModule>();
+
+                var result = RawPython.Run<string>(
+                $"""
+                print({new RawPython.PythonObject(helloWorldText)});
+                return {new RawPython.PythonObject(sys)}.executable;
+                """);
                 
-                new PythonMethodHandle
-                (
-                    parameters: [ nameof(helloWorldText) ],
-                    methodBody: 
-                    $"""
-                    print({nameof(helloWorldText)});
-                    """
-                ).Method(helloWorldText);
+                Console.WriteLine(result);
                 
                 // Numpy module
                 dynamic np = PythonExtensions.GetPythonModule<Numpy>();

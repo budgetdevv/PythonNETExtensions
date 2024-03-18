@@ -1,7 +1,6 @@
-using System;
-using PythonNETExtensions.PythonConfig;
+using PythonNETExtensions.Config;
 
-namespace PythonNETExtensions.PythonVersions
+namespace PythonNETExtensions.Versions
 {
     public readonly struct PyVer3_11<PyConfigT>: IPythonVersion<PyVer3_11<PyConfigT>, PyConfigT> 
         where PyConfigT : struct, IPythonConfig<PyConfigT>

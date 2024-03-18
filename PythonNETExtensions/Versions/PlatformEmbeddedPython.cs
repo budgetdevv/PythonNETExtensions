@@ -1,7 +1,7 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace PythonNETExtensions.PythonVersions
+namespace PythonNETExtensions.Versions
 {
     public struct PlatformEmbeddedPython
     {
