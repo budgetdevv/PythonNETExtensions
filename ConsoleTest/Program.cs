@@ -39,7 +39,7 @@ namespace ConsoleTest
                 Console.WriteLine(result);
                 
                 // Numpy module
-                dynamic np = PythonExtensions.GetPythonModule<Numpy>();
+                var np = PythonExtensions.GetPythonModule<Numpy>();
                 Console.WriteLine(np.array((int[]) [1, 2, 3, 4, 5]));
             }
         }
