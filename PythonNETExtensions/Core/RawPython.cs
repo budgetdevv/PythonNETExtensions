@@ -160,8 +160,6 @@ namespace PythonNETExtensions.Core
 
         private static void RunInternal(string codeText, InterpolationHandler code, CompilationOption compilationOption)
         {
-            Console.WriteLine(codeText);
-            
             var scope = code.Scope;
             
             bool shouldCompile;
@@ -196,6 +194,17 @@ namespace PythonNETExtensions.Core
             else
             {
                 scope.Exec(codeText);
+            }
+
+            if (false)
+            {
+                Console.WriteLine(
+                $"""
+                Compiled: {shouldCompile}
+
+                Codegen:
+                {codeText}
+                """);
             }
         }
     }

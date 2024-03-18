@@ -157,12 +157,12 @@ namespace PythonNETExtensions.Versions
 
             process.WaitForExit(); // Wait for the process to exit
                 
-            if (!string.IsNullOrEmpty(errors))
+            if (!string.IsNullOrWhiteSpace(errors))
             {
                  output +=
                  $"""
-                 "Errors:
-                 {errors}
+                 
+                 Errors:{errors}
                  """;
             }
 
