@@ -26,13 +26,13 @@ namespace ConsoleTest
             
             using (new PythonHandle())
             {
-                var helloWorldText = "Hello World!";
+                const string HELLO_WORLD_TEXT = "Hello World!";
 
                 var sys = PythonExtensions.GetPythonModule<SysModule>();
 
                 var result = RawPython.Run<string>(
                 $"""
-                print({new RawPython.PythonObject(helloWorldText)});
+                print({new RawPython.PythonObject(HELLO_WORLD_TEXT)});
                 return {new RawPython.PythonObject(sys)}.executable;
                 """);
                 
@@ -40,7 +40,7 @@ namespace ConsoleTest
                 
                 // Numpy module
                 var np = PythonExtensions.GetPythonModule<Numpy>();
-                Console.WriteLine(np.array((int[]) [1, 2, 3, 4, 5]));
+                Console.WriteLine(np.array((int[]) [ 1, 2, 3, 4, 5 ]));
             }
         }
     }
