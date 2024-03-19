@@ -1,9 +1,7 @@
-using System;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using PythonNETExtensions.Core;
 using PythonNETExtensions.Modules;
-using PythonNETExtensions.Modules.PythonBuiltIn;
 
 namespace PythonNETExtensions.AsyncIO
 {
@@ -48,7 +46,7 @@ namespace PythonNETExtensions.AsyncIO
                 var eventLoopThread = EVENT_LOOP_THREAD = RawPython.Run<dynamic>(
                     $"""
                      import threading;
-                     return threading.Thread(target={new RawPython.PythonObject((Action) SetupAndRunLoop)});
+                     return threading.Thread(target={(object) SetupAndRunLoop:py});
                      """);
 
                 eventLoopThread.start();
@@ -70,8 +68,8 @@ namespace PythonNETExtensions.AsyncIO
             var awaiter = RawPython.Run<dynamic>(
             $"""
             async def {METHOD_NAME}():
-                {RESULT_VAR_NAME} = await {new RawPython.PythonObject(coroutine)};
-                {new RawPython.PythonObject(taskCompletionSource)}.{nameof(taskCompletionSource.SetResult)}({(hasReturn ?  RESULT_VAR_NAME : string.Empty)});
+                {RESULT_VAR_NAME} = await {(object) coroutine:py};
+                {(object) taskCompletionSource:py}.{nameof(taskCompletionSource.SetResult)}({(hasReturn ?  RESULT_VAR_NAME : string.Empty)});
                       
             return {METHOD_NAME}();
             """);

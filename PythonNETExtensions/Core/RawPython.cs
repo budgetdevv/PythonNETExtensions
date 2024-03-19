@@ -10,14 +10,14 @@ namespace PythonNETExtensions.Core
 {
     public static class RawPython
     {
-        public readonly struct PythonObject
+        public readonly struct Object
         {
             public readonly dynamic Item;
 
             public readonly string Name;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public PythonObject(dynamic item, string name = null)
+            public Object(dynamic item, string name = null)
             {
                 Item = item;
                 Name = name;
@@ -75,7 +75,7 @@ namespace PythonNETExtensions.Core
             }
             
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public void AppendFormatted(PythonObject pyObject)
+            public void AppendFormatted(Object pyObject)
             {
                 var name = pyObject.Name;
 
@@ -107,11 +107,25 @@ namespace PythonNETExtensions.Core
                 
                 LocalStringBuilder.Append(text);
             }
-            
+
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void AppendFormatted<T>(T item)
             {
                 LocalStringBuilder.Append(item);
+            }
+            
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public void AppendFormatted<T>(T item, string format)
+            {
+                if (format == "py")
+                {
+                    AppendFormatted(new Object(item));
+                }
+
+                else
+                {
+                    throw new Exception("Invalid format");
+                }
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]

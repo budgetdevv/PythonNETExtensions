@@ -32,8 +32,8 @@ namespace ConsoleTest
 
                 var result = RawPython.Run<string>(
                 $"""
-                print({new RawPython.PythonObject(HELLO_WORLD_TEXT)});
-                return {new RawPython.PythonObject(sys)}.executable;
+                print({HELLO_WORLD_TEXT:py});
+                return {(object) sys:py}.executable;
                 """);
                 
                 Console.WriteLine(result);
