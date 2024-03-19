@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Python.Runtime;
-using PythonNETExtensions.Awaiters;
+using PythonNETExtensions.AsyncIO;
 using PythonNETExtensions.Config;
 using PythonNETExtensions.Core;
 using PythonNETExtensions.Modules;
@@ -41,6 +41,21 @@ namespace ConsoleTest
                 // Numpy module
                 var np = PythonExtensions.GetPythonModule<Numpy>();
                 Console.WriteLine(np.array((int[]) [ 1, 2, 3, 4, 5 ]));
+            }
+
+            using (var handle = AsyncPythonHandle.Create())
+            {
+                pythonCore.SetupAsyncIO();
+            
+                var asyncIO = PythonExtensions.GetConcretePythonModule<AsyncIOModule>();
+            
+                var sleepCoroutine = asyncIO.Module.sleep(3);
+
+                var task = asyncIO.GetCoroutineAwaiter(sleepCoroutine, handle);
+                
+                await task;
+            
+                Console.WriteLine("Hi");
             }
         }
     }

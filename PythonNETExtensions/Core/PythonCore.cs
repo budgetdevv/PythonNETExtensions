@@ -8,6 +8,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Python.Runtime;
+using PythonNETExtensions.AsyncIO;
 using PythonNETExtensions.Config;
 using PythonNETExtensions.Helpers;
 using PythonNETExtensions.Modules;
@@ -45,33 +46,22 @@ namespace PythonNETExtensions.Core
         private PythonCore() { }
         
         private static readonly HttpClient HTTP_CLIENT = new HttpClient();
-        
-        private enum InitializationState: int
-        {
-            Uninitialized = 0,
-            Initialized = -1
-        }
 
-        private static int IsInitialized = (int) InitializationState.Uninitialized;
-        
-        private static bool TryInitialize()
-        {
-            var oldVal = (InitializationState) Interlocked.CompareExchange(ref IsInitialized, (int) InitializationState.Initialized, (int) InitializationState.Uninitialized);
+        private static Initializer CoreInitializer, AsyncIOIntiializer;
 
-            return oldVal == InitializationState.Uninitialized;
-        }
+        private static dynamic MainPythonThread;
 
-        public Task InitializeAsync()
-        {
-            return InitializeAsyncInternal();
-        }
+        public Task InitializeAsync() => InitializeAsyncInternal();
         
         // AggressiveInlining - Inline into instance method
         // AggressiveOptimization - Only ran once during startup, will never have the chance to tier up
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         private static async Task InitializeAsyncInternal()
         {
-            TryInitialize();
+            if (!CoreInitializer.TryInitialize())
+            {
+                return;
+            }
             
             var pythonBundleDirectory = PyConfigT.PythonHomePath;
 
@@ -120,14 +110,23 @@ namespace PythonNETExtensions.Core
             PythonEngine.PythonHome = pythonBundleDirectory;
             
             PythonEngine.Initialize();
+
+            MainPythonThread = PythonExtensions.GetConcretePythonModule<ThreadingModule>().GetCurrentThread();
+            
             PythonEngine.BeginAllowThreads();
         }
 
         public static string[] PythonPackages { get; private set; }
         
-        public Task InitializeDependentPackages()
+        public Task InitializeDependentPackages() => InitializeDependentPackagesInternal();
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void EnsureInitialized()
         {
-            return InitializeDependentPackagesInternal();
+            if (!CoreInitializer.IsInitialized)
+            {
+                throw new Exception($"Please run {nameof(InitializeAsync)}() first!");
+            }
         }
         
         // AggressiveInlining - Inline into instance method
@@ -135,10 +134,7 @@ namespace PythonNETExtensions.Core
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         private static async Task InitializeDependentPackagesInternal()
         {
-            if ((InitializationState) IsInitialized == InitializationState.Uninitialized)
-            {
-                throw new Exception($"Please run {nameof(InitializeAsync)}() first!");
-            }
+            EnsureInitialized();
             
             var pythonModuleBaseType = typeof(IPythonModuleBase);
 
@@ -183,6 +179,20 @@ namespace PythonNETExtensions.Core
             Console.WriteLine($"Installing {packageName}...");
             
             PyVersionT.RunWithPythonExecutable($"-m pip install {packageName}");
+        }
+        
+        public void SetupAsyncIO() => SetupAsyncIOInternal();
+
+        // AggressiveInlining - Inline into SetupAsyncIO()
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void SetupAsyncIOInternal()
+        {
+            EnsureInitialized();
+
+            using (new PythonHandle())
+            {
+                RuntimeHelpers.RunClassConstructor(typeof(AsyncIOCore).TypeHandle);
+            }
         }
     }
 }

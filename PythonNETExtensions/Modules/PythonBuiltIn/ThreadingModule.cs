@@ -2,7 +2,7 @@ namespace PythonNETExtensions.Modules.PythonBuiltIn
 {
     public struct ThreadingModule: IPythonBuiltInModule<ThreadingModule>, IPythonConcreteModule<ThreadingModule>
     {
-        public static string ModuleName => "sys";
+        public static string ModuleName => "threading";
         
         public static ThreadingModule ConstructConcreteModule(dynamic moduleCache)
         {

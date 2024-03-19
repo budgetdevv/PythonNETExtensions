@@ -6,10 +6,7 @@ namespace PythonNETExtensions.Awaiters
 {
     public struct PythonNewThreadAwaiter: ICriticalNotifyCompletion
     {
-        public PythonNewThreadAwaiter()
-        {
-            
-        }
+        public PythonNewThreadAwaiter() { }
 
         public bool IsCompleted
         {
