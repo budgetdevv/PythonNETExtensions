@@ -33,14 +33,16 @@ namespace PythonNETExtensions.Modules
 
         public dynamic RunCoroutineThreadSafe(dynamic coroutine, dynamic loop) => Module.run_coroutine_threadsafe(coroutine, loop);
 
-        public AsyncIOCoroutineAwaiter GetCoroutineAwaiter(dynamic coroutine, AsyncPythonHandle handle)
+        public AsyncIOCoroutineAwaiter RunCoroutine(dynamic coroutine, AsyncPythonHandle handle)
         {
             return new AsyncIOCoroutineAwaiter(AsyncIOCore.CoroutineToTask(coroutine), handle);
         }
         
-        public Task<RetT> GetCoroutineAwaiter<RetT>(dynamic coroutine)
+        public Task<RetT> RunCoroutine<RetT>(dynamic coroutine)
         {
             return AsyncIOCore.CoroutineToTask<RetT>(coroutine);
         }
+
+        public dynamic Sleep(int durationInSeconds) => Module.sleep(durationInSeconds);
     }
 }
