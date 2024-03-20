@@ -103,7 +103,7 @@ namespace PythonNETExtensions.Versions
 
             else if (OperatingSystem.IsWindows())
             {
-                // TODO: Implement
+                return Path.Combine(homePath, "Lib", "site-packages");
             }
             
             throw new PlatformNotSupportedException();
