@@ -42,11 +42,13 @@ namespace PythonNETExtensions.Core
                 .GetValue(null)!;
         }
         
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public PythonHandle()
         {
             GILState = PyGILState_Ensure();
         }
         
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Dispose()
         {
             PyGILState_Release(GILState);

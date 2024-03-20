@@ -1,20 +1,21 @@
-﻿using System;
-using Python.Runtime;
+﻿using System.Runtime.CompilerServices;
 
 namespace PythonNETExtensions.Core
 {
-    public readonly struct LongRunningCSharpRegion: IDisposable
+    public readonly ref struct LongRunningCSharpRegion
     {
-        private readonly nint Handle;
+        private readonly ref PythonHandle Handle;
         
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public LongRunningCSharpRegion()
         {
-            Handle = PythonEngine.BeginAllowThreads();
+            Handle.Dispose();
         }
         
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Dispose()
         {
-            PythonEngine.EndAllowThreads(Handle);
+            Handle = new PythonHandle();
         }
     }
 }
