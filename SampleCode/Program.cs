@@ -7,11 +7,11 @@ using PythonNETExtensions.Modules;
 using PythonNETExtensions.Modules.PythonBuiltIn;
 using PythonNETExtensions.Versions;
 
-namespace ConsoleTest
+namespace SampleCode
 {
     internal static class Program
     {
-        public struct Numpy: IPythonModule<Numpy>
+        private struct Numpy: IPythonModule<Numpy>
         {
             public static string DependentPackage => "numpy";
             public static string ModuleName => DependentPackage;
