@@ -51,7 +51,18 @@ namespace PythonNETExtensions.Core
 
         private static dynamic MainPythonThread;
 
-        public Task InitializeAsync() => InitializeAsyncInternal();
+        public Task InitializeAsync()
+        {
+            // It seems like async await code causes stack overflow exception when importing Py modules.
+            // I suspect PythonEngine.Initialize() must be ran in the initial thread,
+            // and crossing await boundaries does mess with that.
+            
+            // TODO: Find out why this happens.
+            InitializeAsyncInternal().Wait();
+            return Task.CompletedTask;
+            
+            // return InitializeAsyncInternal();
+        }
         
         // AggressiveInlining - Inline into instance method
         // AggressiveOptimization - Only ran once during startup, will never have the chance to tier up
