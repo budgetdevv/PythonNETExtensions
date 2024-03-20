@@ -461,7 +461,6 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
-.DS_Store
 
-# Ignore the MLNet/Models folder
-BistroBarista/Modules/MLNet/Models
+# MacOS
+.DS_Store
