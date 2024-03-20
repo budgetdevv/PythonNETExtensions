@@ -1,7 +1,6 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
-using Python.Runtime;
-using PythonNETExtensions.AsyncIO;
 using PythonNETExtensions.Config;
 using PythonNETExtensions.Core;
 using PythonNETExtensions.Modules;
@@ -17,8 +16,19 @@ namespace ConsoleTest
             public static string DependentPackage => "numpy";
             public static string ModuleName => DependentPackage;
         }
-        
+
         private static async Task Main(string[] args)
+        {
+            var task = Sample();
+            
+            // Simulate CPU-bound work
+            Thread.Sleep(TimeSpan.FromSeconds(1));
+            Console.WriteLine("AsyncIO.Sleep() is non-blocking!");
+            
+            await task;
+        }
+        
+        private static async Task Sample()
         {
             var pythonCore = PythonCore<PyVer3_11<DefaultPythonConfig>, DefaultPythonConfig>.INSTANCE;
             await pythonCore.InitializeAsync();
@@ -48,14 +58,22 @@ namespace ConsoleTest
                 pythonCore.SetupAsyncIO();
             
                 var asyncIO = PythonExtensions.GetConcretePythonModule<AsyncIOModule>();
-            
-                var sleepCoroutine = asyncIO.Module.sleep(3);
 
-                var task = asyncIO.GetCoroutineAwaiter(sleepCoroutine, handle);
+                const int DELAY_SECONDS = 3;
+                
+                 var asyncCoroutine = RawPython.Run<dynamic>(
+                 $"""
+                    async def async_coroutine():
+                        print("{nameof(asyncIO)} is running!");
+                        await {(object) asyncIO.Sleep(DELAY_SECONDS):py};
+                    return async_coroutine();
+                 """);
+                 
+                var task = asyncIO.RunCoroutine(asyncCoroutine, handle);
                 
                 await task;
             
-                Console.WriteLine("Hi");
+                Console.WriteLine($"Hello after {DELAY_SECONDS} seconds");
             }
         }
     }
