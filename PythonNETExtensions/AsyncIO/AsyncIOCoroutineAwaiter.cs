@@ -20,17 +20,7 @@ namespace PythonNETExtensions.AsyncIO
         public bool IsCompleted
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get
-            {
-                var isComplete = CoroutineTask.IsCompleted;
-
-                if (!isComplete)
-                {
-                    Handle.Handle.Dispose();
-                }
-                
-                return isComplete;
-            }
+            get => CoroutineTask.IsCompleted;
         }
         
         public void OnCompleted(Action continuation)
@@ -41,6 +31,7 @@ namespace PythonNETExtensions.AsyncIO
         public void UnsafeOnCompleted(Action continuation)
         {
             var handle = Handle;
+            handle.Handle.Dispose();
             
             CoroutineTask.ContinueWith(_ =>
             {
