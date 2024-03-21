@@ -10,41 +10,36 @@ namespace PythonNETExtensions.Core
 {
     public static class RawPython
     {
-        public readonly struct Object
+        private struct StringBuilderThreadStaticDefinition: IThreadStaticDefinition<StringBuilder>
         {
-            public readonly dynamic Item;
-
-            public readonly string Name;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static StringBuilder CreateItem()
+            {
+                return new StringBuilder();
+            }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public Object(dynamic item, string name = null)
+            public static void OnGet(ref StringBuilder item)
             {
-                Item = item;
-                Name = name;
+                item.Clear();
             }
         }
         
+        private struct PyScopeThreadStaticDefinition: IThreadStaticDefinition<PyModule>
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static PyModule CreateItem()
+            {
+                return Py.CreateScope();
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static void OnGet(ref PyModule item) { }
+        }
+
         [InterpolatedStringHandler]
         public struct CodeInterpolator
         {
-            [ThreadStatic]
-            private static StringBuilder _StringBuilder;
-
-            private static StringBuilder STRING_BUILDER
-            {
-                [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                get
-                {
-                    return _StringBuilder ?? CreateStringBuilder();
-
-                    [MethodImpl(MethodImplOptions.NoInlining)]
-                    StringBuilder CreateStringBuilder()
-                    {
-                        return new StringBuilder();
-                    }
-                }
-            }
-
             private readonly StringBuilder LocalStringBuilder;
 
             public readonly PyModule Scope;
@@ -56,12 +51,11 @@ namespace PythonNETExtensions.Core
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public CodeInterpolator(int literalLength, int formattedCount)
             {
-                var stringBuilder = LocalStringBuilder = STRING_BUILDER;
-                stringBuilder.Clear();
+                // StringBuilderThreadStaticDefinition clears the StringBuilder for us
+                var stringBuilder = LocalStringBuilder = ThreadStatic<StringBuilderThreadStaticDefinition, StringBuilder>.Item;
                 stringBuilder.EnsureCapacity(literalLength);
-
-                Scope = Py.CreateScope();
                 
+                Scope = ThreadStatic<PyScopeThreadStaticDefinition, PyModule>.Item;
                 ShouldCompile = true;
             }
             
@@ -69,28 +63,6 @@ namespace PythonNETExtensions.Core
             public void AppendLiteral(string text)
             {
                 LocalStringBuilder.Append(text);
-            }
-            
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public void AppendFormatted(Object pyObject)
-            {
-                var name = pyObject.Name;
-
-                if (string.IsNullOrWhiteSpace(name))
-                {
-                    name = $"py_local_{CurrentObjectIndex++}";
-                }
-
-                else
-                {
-                    // If custom name is specified ( Which means we won't be using generated object name ),
-                    // then we can't guarantee similar text, which means compiling is bad idea
-                    ShouldCompile = false;
-                }
-
-                Scope.Set(name, pyObject.Item);
-                
-                LocalStringBuilder.Append(name);
             }
             
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -120,9 +92,12 @@ namespace PythonNETExtensions.Core
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void AppendFormatted<T>(T item, string format)
             {
+                // JIT should be able to eliminate branching, since format is a constant string.
                 if (format == "py")
                 {
-                    AppendFormatted(new Object(item));
+                    var name = $"py_local_{CurrentObjectIndex++}";
+                    Scope.Set(name, item);
+                    LocalStringBuilder.Append(name);
                 }
 
                 else
@@ -145,12 +120,11 @@ namespace PythonNETExtensions.Core
             ExecuteOnly
         }
 
-        private static readonly ConcurrentDictionary<string, PyObject> CODE_TO_COMPILATION_MAP = new ConcurrentDictionary<string, PyObject>(); 
+        private static readonly ConcurrentDictionary<string, PyObject> CODE_TO_COMPILATION_MAP = new(); 
         
         public static void Run(CodeInterpolator code, CompilationOption compilationOption = CompilationOption.Auto)
         {
             var codeText = code.ToString();
-            using var scope = code.Scope;
             RunInternal(codeText, code, compilationOption);
         }
         
@@ -171,10 +145,10 @@ namespace PythonNETExtensions.Core
             
             RunInternal(codeText, code, compilationOption);
             
-            using var scope = code.Scope;
-            return scope.Get<RetT>(RET_VAR_NAME);
+            return code.Scope.Get<RetT>(RET_VAR_NAME);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void RunInternal(string codeText, CodeInterpolator code, CompilationOption compilationOption)
         {
             var scope = code.Scope;
