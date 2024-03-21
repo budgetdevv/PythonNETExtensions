@@ -25,7 +25,7 @@ namespace PythonNETExtensions.Core
         }
         
         [InterpolatedStringHandler]
-        public struct InterpolationHandler
+        public struct CodeInterpolator
         {
             [ThreadStatic]
             private static StringBuilder _StringBuilder;
@@ -54,7 +54,7 @@ namespace PythonNETExtensions.Core
             public bool ShouldCompile;
             
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public InterpolationHandler(int literalLength, int formattedCount)
+            public CodeInterpolator(int literalLength, int formattedCount)
             {
                 var stringBuilder = LocalStringBuilder = STRING_BUILDER;
                 stringBuilder.Clear();
@@ -63,9 +63,6 @@ namespace PythonNETExtensions.Core
                 Scope = Py.CreateScope();
                 
                 ShouldCompile = true;
-
-                // var scope = Py.CreateScope();
-                // scope.Set()
             }
             
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -107,7 +104,7 @@ namespace PythonNETExtensions.Core
                 
                 LocalStringBuilder.Append(text);
             }
-
+            
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void AppendFormatted<T>(T item)
             {
@@ -121,7 +118,7 @@ namespace PythonNETExtensions.Core
             }
             
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public void AppendFormatted<T>(dynamic item, string format)
+            public void AppendFormatted<T>(T item, string format)
             {
                 if (format == "py")
                 {
@@ -150,19 +147,20 @@ namespace PythonNETExtensions.Core
 
         private static readonly ConcurrentDictionary<string, PyObject> CODE_TO_COMPILATION_MAP = new ConcurrentDictionary<string, PyObject>(); 
         
-        public static void Run(InterpolationHandler code, CompilationOption compilationOption = CompilationOption.Auto)
+        public static void Run(CodeInterpolator code, CompilationOption compilationOption = CompilationOption.Auto)
         {
             var codeText = code.ToString();
             using var scope = code.Scope;
             RunInternal(codeText, code, compilationOption);
         }
         
-        public static RetT Run<RetT>(InterpolationHandler code, CompilationOption compilationOption = CompilationOption.Auto)
+        public static RetT Run<RetT>(CodeInterpolator code, CompilationOption compilationOption = CompilationOption.Auto)
         {
             var codeText = code.ToString();
             
             const string METHOD_WRAPPER_NAME = "py_wrapper_method", RET_VAR_NAME = "py_ret";
             
+            // TODO: Somehow optimize performance of this
             codeText = 
             $"""
             def {METHOD_WRAPPER_NAME}():
@@ -177,7 +175,7 @@ namespace PythonNETExtensions.Core
             return scope.Get<RetT>(RET_VAR_NAME);
         }
 
-        private static void RunInternal(string codeText, InterpolationHandler code, CompilationOption compilationOption)
+        private static void RunInternal(string codeText, CodeInterpolator code, CompilationOption compilationOption)
         {
             var scope = code.Scope;
             

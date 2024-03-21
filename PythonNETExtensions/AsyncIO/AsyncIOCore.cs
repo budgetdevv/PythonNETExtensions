@@ -92,7 +92,7 @@ namespace PythonNETExtensions.AsyncIO
                          TASK_COMPLETION_SOURCE_VAR_NAME = "tcs",
                          EXCEPTION_VAR_NAME = "exception";
             
-            var codegen = (RawPython.InterpolationHandler)
+            var codegen = (RawPython.CodeInterpolator)
             $"""
             async def {METHOD_NAME}():
                 try:
