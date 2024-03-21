@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using Python.Runtime;
 using PythonNETExtensions.AsyncIO;
 using PythonNETExtensions.Config;
+using PythonNETExtensions.Core.Handles;
 using PythonNETExtensions.Helpers;
 using PythonNETExtensions.Modules;
 using PythonNETExtensions.Modules.PythonBuiltIn;

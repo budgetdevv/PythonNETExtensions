@@ -1,11 +1,10 @@
-﻿using System;
-using System.Reflection;
+﻿using System.Reflection;
 using System.Runtime.CompilerServices;
 using Python.Runtime;
 
-namespace PythonNETExtensions.Core
+namespace PythonNETExtensions.Core.Handles
 {
-    public unsafe struct PythonHandle: IDisposable
+    public unsafe struct PythonHandle: IPythonHandle
     {
         private PyGILState GILState;
 
@@ -46,6 +45,12 @@ namespace PythonNETExtensions.Core
         public PythonHandle()
         {
             GILState = PyGILState_Ensure();
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public LongRunningCSharpRegion GetLongRunningCSharpRegion()
+        {
+            return new LongRunningCSharpRegion(ref this);
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -1,10 +1,9 @@
-﻿using System;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
 
-namespace PythonNETExtensions.Core
+namespace PythonNETExtensions.Core.Handles
 {
-    public class AsyncPythonHandle: IDisposable
+    public class AsyncPythonHandle: IPythonHandle
     {
         private static readonly ConcurrentBag<AsyncPythonHandle> POOL = [];
         
@@ -33,6 +32,12 @@ namespace PythonNETExtensions.Core
             Handle = new PythonHandle();
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public LongRunningCSharpRegion GetLongRunningCSharpRegion()
+        {
+            return new LongRunningCSharpRegion(ref Handle);
+        }
+        
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Dispose()
         {
