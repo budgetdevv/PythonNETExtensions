@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using PythonNETExtensions.Config;
 using PythonNETExtensions.Core;
+using PythonNETExtensions.Core.Handles;
 using PythonNETExtensions.Modules;
 using PythonNETExtensions.Modules.PythonBuiltIn;
 using PythonNETExtensions.Versions;
@@ -43,7 +44,7 @@ namespace SampleCode
                 var result = RawPython.Run<string>(
                 $"""
                 print({HELLO_WORLD_TEXT:py});
-                return {(object) sys:py}.executable;
+                return {sys:py}.executable;
                 """);
                 
                 Console.WriteLine(result);
@@ -60,20 +61,46 @@ namespace SampleCode
                 var asyncIO = PythonExtensions.GetConcretePythonModule<AsyncIOModule>();
 
                 const int DELAY_SECONDS = 3;
-                
-                 var asyncCoroutine = RawPython.Run<dynamic>(
+
+                 var asyncCoroutine = RawPython.Run<dynamic>
+                 (
                  $"""
-                    async def async_coroutine():
-                        print("{nameof(asyncIO)} is running!");
-                        await {(object) asyncIO.Sleep(DELAY_SECONDS):py};
-                    return async_coroutine();
-                 """);
+                 async def async_coroutine():
+                    print("{nameof(asyncIO)} is running!");
+                    await {asyncIO.Sleep(DELAY_SECONDS):py};
+                 return async_coroutine();
+                 """
+                 );
                  
                 var task = asyncIO.RunCoroutine(asyncCoroutine, handle);
                 
                 await task;
             
                 Console.WriteLine($"Hello after {DELAY_SECONDS} seconds");
+
+                var threadedTask = Task.Run(() =>
+                {
+                    using (new PythonHandle())
+                    {
+                        Console.WriteLine("Threaded task running when long-running C# code is");
+                    }
+                });
+                
+                LongRunningCSharpCode();
+
+                return;
+                
+                void LongRunningCSharpCode()
+                {
+                    using (handle.GetLongRunningCSharpRegion())
+                    {
+                        Console.WriteLine("Start of long-running C# code");
+
+                        Thread.Sleep(1000);
+                        
+                        Console.WriteLine("End of long-running C# code");
+                    }
+                }
             }
         }
     }

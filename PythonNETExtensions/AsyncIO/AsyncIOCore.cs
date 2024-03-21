@@ -1,6 +1,9 @@
+using System;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using Python.Runtime;
 using PythonNETExtensions.Core;
+using PythonNETExtensions.Core.Handles;
 using PythonNETExtensions.Modules;
 
 namespace PythonNETExtensions.AsyncIO
@@ -60,19 +63,49 @@ namespace PythonNETExtensions.AsyncIO
             }
         }
 
+        private static void HandleAsyncExceptions(TaskCompletionSource tcs, PyObject exception)
+        {
+            try
+            {
+                using (new PythonHandle())
+                {
+                    RawPython.Run($"throw {exception:py};");
+                }
+            }
+
+            catch (Exception ex)
+            {
+                tcs.SetException(ex);
+            }
+            
+            // ThrowLastAsClrException(null);
+            //
+            // [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = nameof(ThrowLastAsClrException))]
+            // static extern Exception ThrowLastAsClrException(PythonException @class);
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static dynamic GenerateAwaiter(dynamic taskCompletionSource, dynamic coroutine, bool hasReturn)
         { 
-            const string METHOD_NAME = "generated_awaiter", RESULT_VAR_NAME = "result";
+            const string METHOD_NAME = "generated_awaiter", 
+                         RESULT_VAR_NAME = "result",
+                         TASK_COMPLETION_SOURCE_VAR_NAME = "tcs",
+                         EXCEPTION_VAR_NAME = "exception";
             
-            var awaiter = RawPython.Run<dynamic>(
+            var codegen = (RawPython.InterpolationHandler)
             $"""
             async def {METHOD_NAME}():
-                {RESULT_VAR_NAME} = await {(object) coroutine:py};
-                {(object) taskCompletionSource:py}.{nameof(taskCompletionSource.SetResult)}({(hasReturn ?  RESULT_VAR_NAME : string.Empty)});
-                      
+                try:
+                    {TASK_COMPLETION_SOURCE_VAR_NAME} = {taskCompletionSource:py};
+                    {RESULT_VAR_NAME} = await {coroutine:py};
+                    {TASK_COMPLETION_SOURCE_VAR_NAME}.{nameof(TaskCompletionSource.SetResult)}({(hasReturn ? RESULT_VAR_NAME : string.Empty)});
+                except Exception as {EXCEPTION_VAR_NAME}:
+                    {(object) HandleAsyncExceptions:py}({TASK_COMPLETION_SOURCE_VAR_NAME}, {EXCEPTION_VAR_NAME});
+                                
             return {METHOD_NAME}();
-            """);
+            """;
+            
+            var awaiter = RawPython.Run<dynamic>(codegen);
 
             return awaiter;
         }

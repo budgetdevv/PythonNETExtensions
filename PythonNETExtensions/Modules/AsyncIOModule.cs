@@ -1,7 +1,6 @@
 using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
 using PythonNETExtensions.AsyncIO;
-using PythonNETExtensions.Core;
+using PythonNETExtensions.Core.Handles;
 
 namespace PythonNETExtensions.Modules
 {
@@ -38,9 +37,9 @@ namespace PythonNETExtensions.Modules
             return new AsyncIOCoroutineAwaiter(AsyncIOCore.CoroutineToTask(coroutine), handle);
         }
         
-        public Task<RetT> RunCoroutine<RetT>(dynamic coroutine)
+        public AsyncIOCoroutineAwaiter<RetT> RunCoroutine<RetT>(dynamic coroutine, AsyncPythonHandle handle)
         {
-            return AsyncIOCore.CoroutineToTask<RetT>(coroutine);
+            return new AsyncIOCoroutineAwaiter<RetT>(AsyncIOCore.CoroutineToTask(coroutine), handle);
         }
 
         public dynamic Sleep(int durationInSeconds) => Module.sleep(durationInSeconds);

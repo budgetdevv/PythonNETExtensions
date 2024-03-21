@@ -25,7 +25,7 @@ namespace PythonNETExtensions.Core
         }
         
         [InterpolatedStringHandler]
-        public ref struct InterpolationHandler
+        public struct InterpolationHandler
         {
             [ThreadStatic]
             private static StringBuilder _StringBuilder;
@@ -115,7 +115,13 @@ namespace PythonNETExtensions.Core
             }
             
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public void AppendFormatted<T>(T item, string format)
+            public void AppendFormatted(dynamic item, string format)
+            {
+                AppendFormatted<dynamic>(item, format);
+            }
+            
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public void AppendFormatted<T>(dynamic item, string format)
             {
                 if (format == "py")
                 {
