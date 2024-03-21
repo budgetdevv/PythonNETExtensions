@@ -61,15 +61,16 @@ namespace SampleCode
                 var asyncIO = PythonExtensions.GetConcretePythonModule<AsyncIOModule>();
 
                 const int DELAY_SECONDS = 3;
-
-                 var asyncCoroutine = RawPython.Run<dynamic>
-                 (
-                 $"""
-                 async def async_coroutine():
-                    print("{nameof(asyncIO)} is running!");
-                    await {asyncIO.Sleep(DELAY_SECONDS):py};
-                 return async_coroutine();
-                 """
+                
+                var asyncCoroutine = RawPython.Run<dynamic>
+                (
+                $"""
+                async def async_coroutine():
+                   print("{nameof(asyncIO)} is running!");
+                   await {asyncIO.Sleep(DELAY_SECONDS):py};
+                    
+                return async_coroutine();
+                """
                  );
                  
                 var task = asyncIO.RunCoroutine(asyncCoroutine, handle);

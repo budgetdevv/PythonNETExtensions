@@ -92,7 +92,7 @@ namespace PythonNETExtensions.AsyncIO
                          TASK_COMPLETION_SOURCE_VAR_NAME = "tcs",
                          EXCEPTION_VAR_NAME = "exception";
             
-            var codegen = (RawPython.CodeInterpolator)
+            var awaiter = RawPython.Run<dynamic>(
             $"""
             async def {METHOD_NAME}():
                 try:
@@ -103,9 +103,7 @@ namespace PythonNETExtensions.AsyncIO
                     {(object) HandleAsyncExceptions:py}({TASK_COMPLETION_SOURCE_VAR_NAME}, {EXCEPTION_VAR_NAME});
                                 
             return {METHOD_NAME}();
-            """;
-            
-            var awaiter = RawPython.Run<dynamic>(codegen);
+            """);
 
             return awaiter;
         }

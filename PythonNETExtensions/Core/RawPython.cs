@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Concurrent;
-using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Text;
 using Python.Runtime;
@@ -10,6 +9,35 @@ namespace PythonNETExtensions.Core
 {
     public static class RawPython
     {
+        public enum CompilationOption
+        {
+            Auto,
+            Compile,
+            ExecuteOnly
+        }
+        
+        public interface IRunOptions
+        {
+            public static abstract CompilationOption CompilationOption { get; }
+            public static abstract bool UseCachedScope { get; }
+        }
+
+        public struct DefaultRunOptions: IRunOptions
+        {
+            public static CompilationOption CompilationOption => CompilationOption.Auto;
+            public static bool UseCachedScope => false;
+        }
+        
+        public struct CachedScopeRunOptions: IRunOptions
+        {
+            public static CompilationOption CompilationOption => CompilationOption.Auto;
+            
+            // Use new module, this is so that interpolated variables are "captured".
+            public static bool UseCachedScope => true;
+        }
+        
+        private struct NoRet { }
+        
         private struct StringBuilderThreadStaticDefinition: IThreadStaticDefinition<StringBuilder>
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -38,7 +66,7 @@ namespace PythonNETExtensions.Core
         }
 
         [InterpolatedStringHandler]
-        public struct CodeInterpolator
+        public struct CodeInterpolator<OptsT> where OptsT: IRunOptions
         {
             private readonly StringBuilder LocalStringBuilder;
 
@@ -47,7 +75,7 @@ namespace PythonNETExtensions.Core
             private int CurrentObjectIndex;
 
             public bool ShouldCompile;
-            
+
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public CodeInterpolator(int literalLength, int formattedCount)
             {
@@ -55,8 +83,8 @@ namespace PythonNETExtensions.Core
                 var stringBuilder = LocalStringBuilder = ThreadStatic<StringBuilderThreadStaticDefinition, StringBuilder>.Item;
                 stringBuilder.EnsureCapacity(literalLength);
                 
-                Scope = ThreadStatic<PyScopeThreadStaticDefinition, PyModule>.Item;
-                ShouldCompile = true;
+                Scope = OptsT.UseCachedScope ? ThreadStatic<PyScopeThreadStaticDefinition, PyModule>.Item : Py.CreateScope("NoCache");
+                ShouldCompile = OptsT.CompilationOption != CompilationOption.ExecuteOnly;
             }
             
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -69,7 +97,7 @@ namespace PythonNETExtensions.Core
             public void AppendFormatted(string text)
             {
                 // If any of the formatted strings are not interned, we shouldn't compile
-                if (string.IsInterned(text) == null)
+                if (OptsT.CompilationOption == CompilationOption.Auto && string.IsInterned(text) == null)
                 {
                     ShouldCompile = false;
                 }
@@ -112,64 +140,67 @@ namespace PythonNETExtensions.Core
                 return LocalStringBuilder.ToString();
             }
         }
-        
-        public enum CompilationOption
-        {
-            Auto,
-            Compile,
-            ExecuteOnly
-        }
 
         private static readonly ConcurrentDictionary<string, PyObject> CODE_TO_COMPILATION_MAP = new(); 
         
-        public static void Run(CodeInterpolator code, CompilationOption compilationOption = CompilationOption.Auto)
+        private const string RET_VAR_NAME = "py_ret";
+
+        public static void Run(CodeInterpolator<DefaultRunOptions> code)
         {
-            var codeText = code.ToString();
-            RunInternal(codeText, code, compilationOption);
+            Run<NoRet, DefaultRunOptions>(code);
         }
         
-        public static RetT Run<RetT>(CodeInterpolator code, CompilationOption compilationOption = CompilationOption.Auto)
+        public static void RunWithCachedScope(CodeInterpolator<CachedScopeRunOptions> code)
         {
-            var codeText = code.ToString();
+            Run<NoRet, CachedScopeRunOptions>(code);
+        }
+        
+        public static RetT Run<RetT>(CodeInterpolator<DefaultRunOptions> code)
+        {
+            return Run<RetT, DefaultRunOptions>(code);
+        }
+        
+        public static RetT RunWithCachedScope<RetT>(CodeInterpolator<CachedScopeRunOptions> code)
+        {
+            return Run<RetT, CachedScopeRunOptions>(code);
+        }
+        
+        public static RetT Run<RetT, OptsT>(CodeInterpolator<OptsT> code)
+            where OptsT: IRunOptions
+        {
+            var hasRet = typeof(RetT) != typeof(NoRet);
             
-            const string METHOD_WRAPPER_NAME = "py_wrapper_method", RET_VAR_NAME = "py_ret";
+            var codeText = code.ToString();
+
+            const string METHOD_WRAPPER_NAME = "py_wrapper_method";
             
             // TODO: Somehow optimize performance of this
-            codeText = 
+            codeText = hasRet ?
             $"""
             def {METHOD_WRAPPER_NAME}():
             {codeText.IndentCode()}
                 
             {RET_VAR_NAME} = {METHOD_WRAPPER_NAME}();
-            """;
+            """ : codeText;
             
-            RunInternal(codeText, code, compilationOption);
-            
-            return code.Scope.Get<RetT>(RET_VAR_NAME);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void RunInternal(string codeText, CodeInterpolator code, CompilationOption compilationOption)
-        {
             var scope = code.Scope;
             
-            bool shouldCompile;
-            
-            switch (compilationOption)
-            {
-                case CompilationOption.Auto:
-                    shouldCompile = code.ShouldCompile;
-                    break;
-                case CompilationOption.Compile:
-                    shouldCompile = true;
-                    break;
-                case CompilationOption.ExecuteOnly:
-                    shouldCompile = false;
-                    break;
-                default:
-                    throw new InvalidEnumArgumentException();
-            }
+            var shouldCompile = code.ShouldCompile;
 
+            if (false)
+            {
+                Console.WriteLine(
+                    $"""
+                     Compiled: {shouldCompile}
+
+                     Codegen:
+                     {codeText}
+                     
+                     Scope: {scope}
+                        Variables: {scope.Variables().Keys()}
+                     """);
+            }
+            
             if (shouldCompile)
             {
                 var compilations = CODE_TO_COMPILATION_MAP;
@@ -186,17 +217,15 @@ namespace PythonNETExtensions.Core
             {
                 scope.Exec(codeText);
             }
+            
+            var ret = scope.Get<RetT>(RET_VAR_NAME);
 
-            if (false)
+            if (OptsT.UseCachedScope)
             {
-                Console.WriteLine(
-                $"""
-                Compiled: {shouldCompile}
-
-                Codegen:
-                {codeText}
-                """);
+                scope.Variables().Clear();
             }
+
+            return ret;
         }
     }
 }
