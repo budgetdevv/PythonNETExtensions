@@ -3,7 +3,10 @@ using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
 using System.Text;
 using Python.Runtime;
+using PythonNETExtensions.AsyncIO;
+using PythonNETExtensions.Core.Handles;
 using PythonNETExtensions.Helpers;
+using PythonNETExtensions.Modules;
 
 namespace PythonNETExtensions.Core
 {
@@ -19,13 +22,24 @@ namespace PythonNETExtensions.Core
         public interface IRunOptions
         {
             public static abstract CompilationOption CompilationOption { get; }
+            
             public static abstract bool UseCachedScope { get; }
+        }
+        
+        public interface IAsyncRunOptions: IRunOptions
+        {
+            static bool IRunOptions.UseCachedScope => false;
         }
 
         public struct DefaultRunOptions: IRunOptions
         {
             public static CompilationOption CompilationOption => CompilationOption.Auto;
             public static bool UseCachedScope => false;
+        }
+        
+        public struct DefaultAsyncRunOptions : IAsyncRunOptions
+        {
+            public static CompilationOption CompilationOption { get; }
         }
         
         public struct CachedScopeRunOptions: IRunOptions
@@ -141,31 +155,62 @@ namespace PythonNETExtensions.Core
             }
         }
 
+        private static readonly AsyncIOModule ASYNC_IO_MODULE = PythonExtensions.GetConcretePythonModule<AsyncIOModule>();
+        
         private static readonly ConcurrentDictionary<string, PyObject> CODE_TO_COMPILATION_MAP = new(); 
         
         private const string RET_VAR_NAME = "py_ret";
-
+        
         public static void Run(CodeInterpolator<DefaultRunOptions> code)
         {
-            Run<NoRet, DefaultRunOptions>(code);
+            RunInternal<NoRet, DefaultRunOptions>(code, isAsync: false);
         }
         
         public static void RunWithCachedScope(CodeInterpolator<CachedScopeRunOptions> code)
         {
-            Run<NoRet, CachedScopeRunOptions>(code);
+            RunInternal<NoRet, CachedScopeRunOptions>(code, isAsync: false);
         }
         
         public static RetT Run<RetT>(CodeInterpolator<DefaultRunOptions> code)
         {
-            return Run<RetT, DefaultRunOptions>(code);
+            return RunInternal<RetT, DefaultRunOptions>(code, isAsync: false);
         }
         
         public static RetT RunWithCachedScope<RetT>(CodeInterpolator<CachedScopeRunOptions> code)
         {
-            return Run<RetT, CachedScopeRunOptions>(code);
+            return RunInternal<RetT, CachedScopeRunOptions>(code, isAsync: false);
+        }
+
+        public static RetT Run<RetT, OptsT>(CodeInterpolator<OptsT> code)
+            where OptsT : IRunOptions
+        {
+            return RunInternal<RetT, OptsT>(code, isAsync: false);
         }
         
-        public static RetT Run<RetT, OptsT>(CodeInterpolator<OptsT> code)
+        public static AsyncIOCoroutineAwaiter RunAsync(CodeInterpolator<DefaultAsyncRunOptions> code, AsyncPythonHandle handle)
+        {
+            return ASYNC_IO_MODULE.RunCoroutine(RunInternal<dynamic, DefaultAsyncRunOptions>(code, isAsync: true), handle);
+        }
+        
+        public static AsyncIOCoroutineAwaiter RunAsync<OptsT>(CodeInterpolator<OptsT> code, AsyncPythonHandle handle)
+            where OptsT : IAsyncRunOptions
+        {
+            return ASYNC_IO_MODULE.RunCoroutine(RunInternal<dynamic, OptsT>(code, isAsync: true), handle);
+        }
+        
+        public static AsyncIOCoroutineAwaiter<RetT> RunAsync<RetT>(CodeInterpolator<DefaultAsyncRunOptions> code, AsyncPythonHandle handle)
+        {
+            return ASYNC_IO_MODULE.RunCoroutine<RetT>(RunInternal<dynamic, DefaultAsyncRunOptions>(code, isAsync: true), handle);
+        }
+        
+        public static AsyncIOCoroutineAwaiter<RetT> RunAsync<RetT, OptsT>(CodeInterpolator<OptsT> code, AsyncPythonHandle handle)
+            where OptsT : IAsyncRunOptions
+        {
+            return ASYNC_IO_MODULE.RunCoroutine<RetT>(RunInternal<dynamic, OptsT>(code, isAsync: true), handle);
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static RetT RunInternal<RetT, OptsT>(CodeInterpolator<OptsT> code, bool isAsync)
             where OptsT: IRunOptions
         {
             var hasRet = typeof(RetT) != typeof(NoRet);
@@ -173,11 +218,13 @@ namespace PythonNETExtensions.Core
             var codeText = code.ToString();
 
             const string METHOD_WRAPPER_NAME = "py_wrapper_method";
-            
+
+            var asyncModifer = isAsync ? "async " : string.Empty;
+
             // TODO: Somehow optimize performance of this
             codeText = hasRet ?
             $"""
-            def {METHOD_WRAPPER_NAME}():
+            {asyncModifer}def {METHOD_WRAPPER_NAME}():
             {codeText.IndentCode()}
                 
             {RET_VAR_NAME} = {METHOD_WRAPPER_NAME}();
@@ -217,15 +264,30 @@ namespace PythonNETExtensions.Core
             {
                 scope.Exec(codeText);
             }
-            
-            var ret = scope.Get<RetT>(RET_VAR_NAME);
 
-            if (OptsT.UseCachedScope)
+            var variables = scope.Variables();
+
+            if (hasRet)
             {
-                scope.Variables().Clear();
+                var ret = scope.Get<RetT>(RET_VAR_NAME);
+
+                if (OptsT.UseCachedScope)
+                {
+                    variables.Clear();
+                }
+
+                return ret;
             }
 
-            return ret;
+            else
+            {
+                if (OptsT.UseCachedScope)
+                {
+                    variables.Clear();
+                }
+
+                return default;
+            }
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using PythonNETExtensions.Config;
@@ -60,22 +61,18 @@ namespace SampleCode
             
                 var asyncIO = PythonExtensions.GetConcretePythonModule<AsyncIOModule>();
 
-                const int DELAY_SECONDS = 3;
+                const int DELAY_SECONDS = 2;
                 
-                var asyncCoroutine = RawPython.Run<dynamic>
+                Debug.Assert(DELAY_SECONDS >= 2);
+                
+                var awaiter = RawPython.RunAsync
                 (
                 $"""
-                async def async_coroutine():
-                   print("{nameof(asyncIO)} is running!");
-                   await {asyncIO.Sleep(DELAY_SECONDS):py};
-                    
-                return async_coroutine();
-                """
-                 );
-                 
-                var task = asyncIO.RunCoroutine(asyncCoroutine, handle);
-                
-                await task;
+                print("{nameof(asyncIO)} is running!");
+                await {asyncIO.Sleep(DELAY_SECONDS):py};
+                """, handle);
+
+                await awaiter;
             
                 Console.WriteLine($"Hello after {DELAY_SECONDS} seconds");
 
