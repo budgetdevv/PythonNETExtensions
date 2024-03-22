@@ -6,7 +6,7 @@ using PythonNETExtensions.Config;
 using PythonNETExtensions.Core;
 using PythonNETExtensions.Core.Handles;
 using PythonNETExtensions.Modules;
-using PythonNETExtensions.Modules.PythonBuiltIn;
+using PythonNETExtensions.Modules.BuiltIns;
 using PythonNETExtensions.Versions;
 
 namespace SampleCode

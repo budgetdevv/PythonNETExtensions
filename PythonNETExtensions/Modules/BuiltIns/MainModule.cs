@@ -1,4 +1,4 @@
-namespace PythonNETExtensions.Modules.PythonBuiltIn
+namespace PythonNETExtensions.Modules.BuiltIns
 {
     public struct MainModule: IPythonBuiltInModule<MainModule>
     {
