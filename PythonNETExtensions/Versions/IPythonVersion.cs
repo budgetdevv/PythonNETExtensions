@@ -79,7 +79,7 @@ namespace PythonNETExtensions.Versions
     
             else if (OperatingSystem.IsLinux())
             {
-                return Path.Combine(dllContainingDirectory, $"libpython{version}.so");
+                return Path.Combine(dllContainingDirectory, $"libpython{version}.so.1.0");
             }
 
             throw new PlatformNotSupportedException();
