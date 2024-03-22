@@ -54,9 +54,8 @@ namespace SampleCode
                 
                 Console.WriteLine(result);
                 
-                // Numpy module
-                var np = PythonModule.Get<Numpy>();
-                Console.WriteLine(np.array((int[]) [ 1, 2, 3, 4, 5 ]));
+                var numpy = PythonModule.Get<Numpy>();
+                Console.WriteLine(numpy.array((int[]) [ 1, 2, 3, 4, 5 ]));
             }
 
             using (var handle = AsyncPythonHandle.Create())
