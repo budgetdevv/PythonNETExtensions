@@ -39,7 +39,7 @@ namespace PythonNETExtensions.Modules
         
         public AsyncIOCoroutineAwaiter<RetT> RunCoroutine<RetT>(dynamic coroutine, AsyncPythonHandle handle)
         {
-            return new AsyncIOCoroutineAwaiter<RetT>(AsyncIOCore.CoroutineToTask(coroutine), handle);
+            return new AsyncIOCoroutineAwaiter<RetT>(AsyncIOCore.CoroutineToTask<RetT>(coroutine), handle);
         }
 
         public dynamic Sleep(int durationInSeconds) => Module.sleep(durationInSeconds);
