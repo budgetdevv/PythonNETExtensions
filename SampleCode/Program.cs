@@ -32,7 +32,11 @@ namespace SampleCode
         
         private static async Task Sample()
         {
-            var pythonCore = PythonCore<PyVer3_11<DefaultPythonConfig>, DefaultPythonConfig>.INSTANCE;
+            var pythonCore = new PythonCoreBuilder()
+                .WithConfig<DefaultPythonConfig>()
+                .WithVersion<PyVer3_11<DefaultPythonConfig>>()
+                .Build();
+            
             await pythonCore.InitializeAsync();
             await pythonCore.InitializeDependentPackages();
             

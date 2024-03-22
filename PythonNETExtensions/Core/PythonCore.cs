@@ -32,7 +32,7 @@ namespace PythonNETExtensions.Core
             throw new Exception("There may only be 1 PythonCore instance!");
         }
     }
-    
+
     public class PythonCore<PyVersionT, PyConfigT>
         where PyVersionT: struct, IPythonVersion<PyVersionT, PyConfigT>
         where PyConfigT: struct, IPythonConfig<PyConfigT>
