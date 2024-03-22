@@ -92,3 +92,11 @@ using (var handle = AsyncPythonHandle.Create())
     Console.WriteLine(result);
 }
 ```
+
+# Supported Platforms
+
+- MacOS: AMD64 / ARM64
+- Windows: AMD64 ( ARM64 support coming soon )
+- Linux: ARM64 ( AMD64 support coming soon )
+
+32-bit platforms are NOT supported!
