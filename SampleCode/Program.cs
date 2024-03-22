@@ -44,7 +44,7 @@ namespace SampleCode
             {
                 const string HELLO_WORLD_TEXT = "Hello World!";
 
-                var sys = PythonExtensions.GetPythonModule<SysModule>();
+                var sys = PythonModule.Get<SysModule>();
 
                 var result = RawPython.Run<string>(
                 $"""
@@ -55,7 +55,7 @@ namespace SampleCode
                 Console.WriteLine(result);
                 
                 // Numpy module
-                var np = PythonExtensions.GetPythonModule<Numpy>();
+                var np = PythonModule.Get<Numpy>();
                 Console.WriteLine(np.array((int[]) [ 1, 2, 3, 4, 5 ]));
             }
 
@@ -63,7 +63,7 @@ namespace SampleCode
             {
                 pythonCore.SetupAsyncIO();
             
-                var asyncIO = PythonExtensions.GetConcretePythonModule<AsyncIOModule>();
+                var asyncIO = PythonModule.GetConcrete<AsyncIOModule>();
 
                 const int DELAY_SECONDS = 2;
                 

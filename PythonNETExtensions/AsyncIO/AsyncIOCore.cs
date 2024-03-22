@@ -18,7 +18,7 @@ namespace PythonNETExtensions.AsyncIO
         {
             // Assume that GIL is taken. It is an internal class so only we can invoke it anyway
 
-            var asyncIO = ASYNC_IO = PythonExtensions.GetConcretePythonModule<AsyncIOModule>();
+            var asyncIO = ASYNC_IO = PythonModule.GetConcrete<AsyncIOModule>();
              
             if (false)
             {

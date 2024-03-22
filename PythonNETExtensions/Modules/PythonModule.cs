@@ -1,18 +1,17 @@
 using System.Runtime.CompilerServices;
-using PythonNETExtensions.Modules;
 
-namespace PythonNETExtensions.Core
+namespace PythonNETExtensions.Modules
 {
-    public static class PythonExtensions
+    public static class PythonModule
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static dynamic GetPythonModule<PythonModuleT>() where PythonModuleT: struct, IPythonModule<PythonModuleT>
+        public static dynamic Get<PythonModuleT>() where PythonModuleT: struct, IPythonModule<PythonModuleT>
         {
             return PythonModuleT.ModuleCache;
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static PythonModuleT GetConcretePythonModule<PythonModuleT>() 
+        public static PythonModuleT GetConcrete<PythonModuleT>() 
             where PythonModuleT: struct, IPythonConcreteModule<PythonModuleT>, IPythonModule<PythonModuleT>
         {
             return PythonModuleT.ConstructConcreteModule(PythonModuleT.ModuleCache);

@@ -155,7 +155,7 @@ namespace PythonNETExtensions.Core
             }
         }
 
-        private static readonly AsyncIOModule ASYNC_IO_MODULE = PythonExtensions.GetConcretePythonModule<AsyncIOModule>();
+        private static readonly AsyncIOModule ASYNC_IO_MODULE = PythonModule.GetConcrete<AsyncIOModule>();
         
         private static readonly ConcurrentDictionary<string, PyObject> CODE_TO_COMPILATION_MAP = new(); 
         

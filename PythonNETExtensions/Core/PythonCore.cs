@@ -123,7 +123,7 @@ namespace PythonNETExtensions.Core
             
             PythonEngine.Initialize();
 
-            MainPythonThread = PythonExtensions.GetConcretePythonModule<ThreadingModule>().GetCurrentThread();
+            MainPythonThread = PythonModule.GetConcrete<ThreadingModule>().GetCurrentThread();
             
             PythonEngine.BeginAllowThreads();
         }
