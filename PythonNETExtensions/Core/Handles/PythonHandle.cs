@@ -4,7 +4,7 @@ using Python.Runtime;
 
 namespace PythonNETExtensions.Core.Handles
 {
-    public unsafe struct PythonHandle: IPythonHandle
+    public unsafe struct PythonHandle: IPythonHandle<PythonHandle>
     {
         private PyGILState GILState;
 
@@ -39,6 +39,11 @@ namespace PythonNETExtensions.Core.Handles
             PyGILState_Release = (delegate* unmanaged[Cdecl]<PyGILState, void>) (nint) delegates
                 .GetProperty(nameof(PyGILState_Release), bindingFlags)!
                 .GetValue(null)!;
+        }
+        
+        public static PythonHandle Create()
+        {
+            return new PythonHandle();
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

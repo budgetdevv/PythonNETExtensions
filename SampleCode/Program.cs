@@ -40,7 +40,7 @@ namespace SampleCode
             await pythonCore.InitializeAsync();
             await pythonCore.InitializeDependentPackages();
             
-            using (new PythonHandle())
+            using (PythonHandle.Create())
             {
                 const string HELLO_WORLD_TEXT = "Hello World!";
 
@@ -63,13 +63,12 @@ namespace SampleCode
                 pythonCore.SetupAsyncIO();
             
                 var asyncIO = PythonModule.GetConcrete<AsyncIOModule>();
-
+                
                 const int DELAY_SECONDS = 2;
                 
                 Debug.Assert(DELAY_SECONDS >= 2);
                 
-                var awaiter = RawPython.RunAsync
-                (
+                var awaiter = RawPython.RunAsync(
                 $"""
                 print("{nameof(asyncIO)} is running!");
                 await {asyncIO.Sleep(DELAY_SECONDS):py};

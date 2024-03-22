@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 
 namespace PythonNETExtensions.Core.Handles
 {
-    public class AsyncPythonHandle: IPythonHandle
+    public class AsyncPythonHandle: IPythonHandle<AsyncPythonHandle>
     {
         private static readonly ConcurrentBag<AsyncPythonHandle> POOL = [];
         
@@ -26,8 +26,8 @@ namespace PythonNETExtensions.Core.Handles
         }
 
         internal PythonHandle Handle;
-        
-        public AsyncPythonHandle()
+
+        private AsyncPythonHandle()
         {
             Handle = new PythonHandle();
         }
