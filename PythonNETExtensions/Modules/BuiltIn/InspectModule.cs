@@ -1,4 +1,4 @@
-namespace PythonNETExtensions.Modules
+namespace PythonNETExtensions.Modules.BuiltIn
 {
     public struct InspectModule: IPythonBuiltInModule<InspectModule>
     {

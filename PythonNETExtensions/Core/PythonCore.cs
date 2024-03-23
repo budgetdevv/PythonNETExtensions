@@ -13,7 +13,7 @@ using PythonNETExtensions.Config;
 using PythonNETExtensions.Core.Handles;
 using PythonNETExtensions.Helpers;
 using PythonNETExtensions.Modules;
-using PythonNETExtensions.Modules.BuiltIns;
+using PythonNETExtensions.Modules.BuiltIn;
 using PythonNETExtensions.Versions;
 
 namespace PythonNETExtensions.Core
