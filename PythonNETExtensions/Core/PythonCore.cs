@@ -13,7 +13,7 @@ using PythonNETExtensions.Config;
 using PythonNETExtensions.Core.Handles;
 using PythonNETExtensions.Helpers;
 using PythonNETExtensions.Modules;
-using PythonNETExtensions.Modules.BuiltIns;
+using PythonNETExtensions.Modules.BuiltIn;
 using PythonNETExtensions.Versions;
 
 namespace PythonNETExtensions.Core
@@ -159,8 +159,12 @@ namespace PythonNETExtensions.Core
 
             var bindingFlags = BindingFlags.Static | BindingFlags.Public;
 
-            var packages = new HashSet<string>(modules.Length);
+            var moduleCount = modules.Length;
+            
+            var packageNames = new HashSet<string>(moduleCount);
 
+            var moduleTypeHandles = new HashSet<RuntimeTypeHandle>(moduleCount);
+            
             // Initializing the module cache uses Py code, which means we need to take the GIL
             using (new PythonHandle())
             {
@@ -168,29 +172,37 @@ namespace PythonNETExtensions.Core
                 {
                     // Has nothing to do with MainModule - it is just a generic argument required to satisfy the compiler
                     // module.GetProperty() may return null, since Python built-in modules do not have explicit DependentPackage declaration
-                    var packageName = Unsafe.As<string>(module.GetProperty(nameof(IPythonModule<MainModule>.DependentPackage), bindingFlags)?.GetValue(null));
-                
+                    var packageName = Unsafe.As<string>(module
+                        .GetProperty(nameof(IPythonModule<MainModule>.DependentPackage), bindingFlags)?.GetValue(null));
+
                     // TODO: Are pip packages case insensitive?
                     if (!string.IsNullOrWhiteSpace(packageName))
                     {
-                        InstallPackage(packageName);
+                        packageNames.Add(packageName);
                     }
-                    
+
+                    moduleTypeHandles.Add(typeof(ModuleCache<>).MakeGenericType(module).TypeHandle);
+                }
+
+                var pythonPackageNames = PythonPackages = packageNames.ToArray();
+                
+                InstallPackages(pythonPackageNames);
+
+                foreach (var typeHandle in moduleTypeHandles)
+                {
                     // Initialize module cache
-                    RuntimeHelpers.RunClassConstructor(typeof(ModuleCache<>).MakeGenericType(module).TypeHandle);
+                    RuntimeHelpers.RunClassConstructor(typeHandle);
                 }
             }
-
-            PythonPackages = packages.ToArray();
         }
         
         // AggressiveInlining - Inline into InitializeDependentPackagesInternal()
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void InstallPackage(string packageName)
+        private static void InstallPackages(string[] packageNames)
         {
-            Console.WriteLine($"Installing {packageName}...");
+            Console.WriteLine($"Installing packages! [{packageNames.Length}]...");
             
-            PyVersionT.RunWithPythonExecutable($"-m pip install {packageName}");
+            PyVersionT.RunWithPythonExecutable($"-m pip install { string.Join(' ', packageNames) }");
         }
         
         public void SetupAsyncIO() => SetupAsyncIOInternal();
