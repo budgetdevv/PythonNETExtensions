@@ -130,7 +130,7 @@ namespace PythonNETExtensions.Core
 
         public static string[] PythonPackages { get; private set; }
         
-        public Task InitializeDependentPackages() => InitializeDependentPackagesInternal();
+        public Task InitializeDependentPackages(bool force = false) => InitializeDependentPackagesInternal(force);
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void EnsureInitialized()
@@ -144,7 +144,7 @@ namespace PythonNETExtensions.Core
         // AggressiveInlining - Inline into instance method
         // AggressiveOptimization - Only ran once during startup, will never have the chance to tier up
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        private static async Task InitializeDependentPackagesInternal()
+        private static async Task InitializeDependentPackagesInternal(bool force)
         {
             EnsureInitialized();
             
@@ -186,7 +186,7 @@ namespace PythonNETExtensions.Core
 
                 var pythonPackageNames = PythonPackages = packageNames.ToArray();
                 
-                InstallPackages(pythonPackageNames);
+                InstallPackages(pythonPackageNames, force);
 
                 foreach (var typeHandle in moduleTypeHandles)
                 {
@@ -198,11 +198,13 @@ namespace PythonNETExtensions.Core
         
         // AggressiveInlining - Inline into InitializeDependentPackagesInternal()
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void InstallPackages(string[] packageNames)
+        private static void InstallPackages(string[] packageNames, bool force)
         {
             Console.WriteLine($"Installing packages! [{packageNames.Length}]...");
+
+            var forceReinstallText = force ? "--force-reinstall " : string.Empty;
             
-            PyVersionT.RunWithPythonExecutable($"-m pip install { string.Join(' ', packageNames) }");
+            PyVersionT.RunWithPythonExecutable($"-m pip install {forceReinstallText}{ string.Join(' ', packageNames) }");
         }
         
         public void SetupAsyncIO() => SetupAsyncIOInternal();
