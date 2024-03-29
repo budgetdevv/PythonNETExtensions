@@ -5,6 +5,7 @@ using Python.Runtime;
 using PythonNETExtensions.Core;
 using PythonNETExtensions.Core.Handles;
 using PythonNETExtensions.Modules;
+using PythonNETExtensions.Modules.ThirdParty;
 
 namespace PythonNETExtensions.AsyncIO
 {

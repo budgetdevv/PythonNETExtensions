@@ -7,6 +7,7 @@ using PythonNETExtensions.Core;
 using PythonNETExtensions.Core.Handles;
 using PythonNETExtensions.Modules;
 using PythonNETExtensions.Modules.BuiltIn;
+using PythonNETExtensions.Modules.ThirdParty;
 using PythonNETExtensions.Versions;
 
 namespace SampleCode
@@ -17,6 +18,7 @@ namespace SampleCode
         {
             public static string DependentPackage => "numpy";
             public static string ModuleName => DependentPackage;
+            public static event Action<Numpy> OnModuleInitialized;
         }
 
         private static async Task Main(string[] args)

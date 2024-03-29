@@ -7,6 +7,7 @@ using PythonNETExtensions.AsyncIO;
 using PythonNETExtensions.Core.Handles;
 using PythonNETExtensions.Helpers;
 using PythonNETExtensions.Modules;
+using PythonNETExtensions.Modules.ThirdParty;
 
 namespace PythonNETExtensions.Core
 {

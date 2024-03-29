@@ -1,3 +1,4 @@
+using System;
 using System.Runtime.CompilerServices;
 using PythonNETExtensions.AsyncIO;
 using PythonNETExtensions.Core.Handles;
@@ -8,7 +9,8 @@ namespace PythonNETExtensions.Modules.ThirdParty
     {
         public static string DependentPackage => "asyncio";
         public static string ModuleName => DependentPackage;
-        
+        public static event Action<AsyncIOModule> OnModuleInitialized;
+
         public static AsyncIOModule ConstructConcreteModule(dynamic moduleCache)
         {
             return new AsyncIOModule(moduleCache);
