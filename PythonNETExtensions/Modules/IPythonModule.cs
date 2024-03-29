@@ -1,5 +1,3 @@
-using System;
-
 namespace PythonNETExtensions.Modules
 {
     public interface IPythonModuleBase
