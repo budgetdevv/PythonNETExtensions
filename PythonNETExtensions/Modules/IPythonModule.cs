@@ -1,8 +1,12 @@
+using System;
+
 namespace PythonNETExtensions.Modules
 {
     public interface IPythonModuleBase
     {
         // Tag interface for reflection 
+
+        public static Action OnModulesLoaded;
     }
     
     public interface IPythonModule<PyModuleT>: IPythonModuleBase where PyModuleT: struct, IPythonModule<PyModuleT>

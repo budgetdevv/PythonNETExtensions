@@ -193,6 +193,8 @@ namespace PythonNETExtensions.Core
                     // Initialize module cache
                     RuntimeHelpers.RunClassConstructor(typeHandle);
                 }
+
+                IPythonModuleBase.OnModulesLoaded();
             }
         }
         
