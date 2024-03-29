@@ -2,7 +2,7 @@ using System.Runtime.CompilerServices;
 using PythonNETExtensions.AsyncIO;
 using PythonNETExtensions.Core.Handles;
 
-namespace PythonNETExtensions.Modules
+namespace PythonNETExtensions.Modules.ThirdParty
 {
     public struct AsyncIOModule: IPythonModule<AsyncIOModule>, IPythonConcreteModule<AsyncIOModule>
     {
