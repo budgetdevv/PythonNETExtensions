@@ -5,6 +5,6 @@ namespace PythonNETExtensions.Modules.BuiltIn
     public struct SysModule: IPythonBuiltInModule<SysModule>
     {
         public static string ModuleName => "sys";
-        public static event Action<SysModule> OnModuleInitialized;
+        public static event Action OnModuleInitialized;
     }
 }

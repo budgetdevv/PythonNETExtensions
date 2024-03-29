@@ -13,7 +13,7 @@ namespace PythonNETExtensions.Modules
         
         public static abstract string ModuleName { get; }
 
-        public static abstract event Action<PyModuleT> OnModuleInitialized;
+        public static abstract event Action OnModuleInitialized;
 
         public static virtual dynamic ModuleCache => ModuleCache<PyModuleT>.CACHED_MODULE;
     }

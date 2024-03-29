@@ -163,7 +163,7 @@ namespace PythonNETExtensions.Core
             
             var packageNames = new HashSet<string>(moduleCount);
 
-            var moduleTypeHandles = new HashSet<RuntimeTypeHandle>(moduleCount);
+            var moduleTypes = new HashSet<Type>(moduleCount);
             
             // Initializing the module cache uses Py code, which means we need to take the GIL
             using (new PythonHandle())
@@ -181,17 +181,26 @@ namespace PythonNETExtensions.Core
                         packageNames.Add(packageName);
                     }
 
-                    moduleTypeHandles.Add(typeof(ModuleCache<>).MakeGenericType(module).TypeHandle);
+                    moduleTypes.Add(typeof(ModuleCache<>).MakeGenericType(module));
                 }
 
                 var pythonPackageNames = PythonPackages = packageNames.ToArray();
                 
                 InstallPackages(pythonPackageNames, force);
 
-                foreach (var typeHandle in moduleTypeHandles)
+                foreach (var type in moduleTypes)
                 {
                     // Initialize module cache
-                    RuntimeHelpers.RunClassConstructor(typeHandle);
+                    RuntimeHelpers.RunClassConstructor(type.TypeHandle);
+
+                    var onModuleInitializedEvent = type
+                        .GetField(nameof(IPythonModule<MainModule>.OnModuleInitialized), bindingFlags)!
+                        .GetValue(null);
+
+                    if (onModuleInitializedEvent != null)
+                    {
+                        Unsafe.As<Action>(onModuleInitializedEvent)();
+                    }
                 }
             }
         }

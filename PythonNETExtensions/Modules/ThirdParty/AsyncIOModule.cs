@@ -9,7 +9,7 @@ namespace PythonNETExtensions.Modules.ThirdParty
     {
         public static string DependentPackage => "asyncio";
         public static string ModuleName => DependentPackage;
-        public static event Action<AsyncIOModule> OnModuleInitialized;
+        public static event Action OnModuleInitialized;
 
         public static AsyncIOModule ConstructConcreteModule(dynamic moduleCache)
         {

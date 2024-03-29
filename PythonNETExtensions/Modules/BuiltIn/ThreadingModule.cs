@@ -5,7 +5,7 @@ namespace PythonNETExtensions.Modules.BuiltIn
     public struct ThreadingModule: IPythonBuiltInModule<ThreadingModule>, IPythonConcreteModule<ThreadingModule>
     {
         public static string ModuleName => "threading";
-        public static event Action<ThreadingModule> OnModuleInitialized;
+        public static event Action OnModuleInitialized;
 
         public static ThreadingModule ConstructConcreteModule(dynamic moduleCache)
         {
