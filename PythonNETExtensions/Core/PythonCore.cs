@@ -194,7 +194,7 @@ namespace PythonNETExtensions.Core
                     RuntimeHelpers.RunClassConstructor(typeHandle);
                 }
 
-                IPythonModuleBase.OnModulesLoaded();
+                IPythonModuleBase.OnModulesLoaded?.Invoke();
             }
         }
         
