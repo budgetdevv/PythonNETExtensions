@@ -17,50 +17,27 @@ namespace PythonNETExtensions.AsyncIO
 
         static AsyncIOCore()
         {
-            // Assume that GIL is taken. It is an internal class so only we can invoke it anyway
+            // Assume that GIL is taken. It is an internal class - only we can invoke it anyway
 
             var asyncIO = ASYNC_IO = PythonModule.GetConcrete<AsyncIOModule>();
              
-            if (false)
-            {
-                 var result = RawPython.Run<dynamic>(
-                 $"""
-                 import asyncio;
-                 import threading;
-
-                 loop = asyncio.new_event_loop();
-
-                 def set_and_run(loop):
-                 asyncio.set_event_loop(loop);
-                 loop.run_forever();
-                               
-                 loop_thread = threading.Thread(target=set_and_run, args=(loop,));
-                 loop_thread.start();
-                 return (loop, loop_thread);
-                 """);
-             
-                EVENT_LOOP = result[0];
-                EVENT_LOOP_THREAD = result[1];
-            }
-             
-            else
-            {
-                EVENT_LOOP = asyncIO.CreateEventLoop();
+            EVENT_LOOP = asyncIO.CreateEventLoop();
                 
-                var eventLoopThread = EVENT_LOOP_THREAD = RawPython.Run<dynamic>(
-                    $"""
-                     import threading;
-                     return threading.Thread(target={(object) SetupAndRunLoop:py});
-                     """);
+            var eventLoopThread = EVENT_LOOP_THREAD = RawPython.Run<dynamic>(
+            $"""
+            import threading;
+            return threading.Thread(target={(object) SetupAndRunLoop:py});
+            """);
 
-                eventLoopThread.start();
+            eventLoopThread.start();
             
-                void SetupAndRunLoop()
-                {
-                    var eventLoop = EVENT_LOOP;
-                    asyncIO.SetEventLoop(eventLoop);
-                    eventLoop.run_forever();
-                }
+            return;
+
+            void SetupAndRunLoop()
+            {
+                var eventLoop = EVENT_LOOP;
+                asyncIO.SetEventLoop(eventLoop);
+                eventLoop.run_forever();
             }
         }
 
