@@ -17,6 +17,9 @@ namespace SampleCode
         private struct Numpy: IPythonModule<Numpy>
         {
             public static string DependentPackage => "numpy";
+            
+            static string IPythonModule<Numpy>.DependentPackageVersion => "2.2.0";
+            
             public static string ModuleName => DependentPackage;
         }
 

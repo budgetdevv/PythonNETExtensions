@@ -12,6 +12,8 @@ namespace PythonNETExtensions.Modules
     public interface IPythonModule<PyModuleT>: IPythonModuleBase where PyModuleT: struct, IPythonModule<PyModuleT>
     {
         public static abstract string DependentPackage { get; }
+
+        public static virtual string? DependentPackageVersion => null;
         
         public static abstract string ModuleName { get; }
 
