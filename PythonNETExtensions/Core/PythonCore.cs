@@ -157,12 +157,14 @@ namespace PythonNETExtensions.Core
                 .Where(x => x.IsValueType && x.GetInterfaces().Contains(pythonModuleBaseType))
                 .ToArray();
 
-            var bindingFlags = BindingFlags.Static | BindingFlags.Public;
+            var bindingFlags = unchecked((BindingFlags) (-1)) & ~BindingFlags.Instance;
 
             var moduleCount = modules.Length;
             
             var packageNames = new HashSet<string>(moduleCount);
-
+            
+            var pipInstallNames = new List<string>(moduleCount);
+            
             var moduleTypeHandles = new HashSet<RuntimeTypeHandle>(moduleCount);
             
             // Initializing the module cache uses Py code, which means we need to take the GIL
@@ -173,20 +175,37 @@ namespace PythonNETExtensions.Core
                     // Has nothing to do with MainModule - it is just a generic argument required to satisfy the compiler
                     // module.GetProperty() may return null, since Python built-in modules do not have explicit DependentPackage declaration
                     var packageName = Unsafe.As<string>(module
-                        .GetProperty(nameof(IPythonModule<MainModule>.DependentPackage), bindingFlags)?.GetValue(null));
+                        .GetProperty(nameof(IPythonModule<MainModule>.DependentPackage), bindingFlags)?
+                        .GetValue(null)
+                    );
 
                     // TODO: Are pip packages case insensitive?
                     if (!string.IsNullOrWhiteSpace(packageName))
                     {
                         packageNames.Add(packageName);
+                        
+                        var packageVersion = Unsafe.As<string?>(module
+                            .GetProperties(bindingFlags)?
+                            .FirstOrDefault(x => x.Name.Split('.').LastOrDefault() == nameof(IPythonModule<MainModule>.DependentPackageVersion))?
+                            .GetValue(null)
+                        );
+                        
+                        var pipInstallName = packageName;
+                        
+                        if (!string.IsNullOrWhiteSpace(packageVersion))
+                        {
+                            pipInstallName += $"=={packageVersion}";
+                        }
+                        
+                        pipInstallNames.Add(pipInstallName);
                     }
 
                     moduleTypeHandles.Add(typeof(ModuleCache<>).MakeGenericType(module).TypeHandle);
                 }
 
-                var pythonPackageNames = PythonPackages = packageNames.ToArray();
+                PythonPackages = packageNames.ToArray();
                 
-                InstallPackages(pythonPackageNames, force);
+                InstallPackages(pipInstallNames, force);
 
                 foreach (var typeHandle in moduleTypeHandles)
                 {
@@ -200,13 +219,17 @@ namespace PythonNETExtensions.Core
         
         // AggressiveInlining - Inline into InitializeDependentPackagesInternal()
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void InstallPackages(string[] packageNames, bool force)
+        private static void InstallPackages(List<string> packageNames, bool force)
         {
-            Console.WriteLine($"Installing packages! [{packageNames.Length}]...");
+            Console.WriteLine($"Installing packages! [{packageNames.Count}]...");
 
             var forceReinstallText = force ? "--force-reinstall " : string.Empty;
+
+            var command = $"-m pip install {forceReinstallText}{string.Join(' ', packageNames)}";
+
+            Console.WriteLine(command);
             
-            PyVersionT.RunWithPythonExecutable($"-m pip install {forceReinstallText}{ string.Join(' ', packageNames) }");
+            PyVersionT.RunWithPythonExecutable(command);
         }
         
         public void SetupAsyncIO() => SetupAsyncIOInternal();
